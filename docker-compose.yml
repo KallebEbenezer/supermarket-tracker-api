@@ -1,0 +1,37 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: supermarket-tracker-postgres
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-supermarket_tracker}
+      POSTGRES_USER: ${POSTGRES_USER:-supermarket}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-supermarket}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  app:
+    build:
+      context: .
+    container_name: supermarket-tracker-api
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: ${POSTGRES_DB:-supermarket_tracker}
+      DB_USERNAME: ${POSTGRES_USER:-supermarket}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-supermarket}
+    ports:
+      - "${APP_PORT:-8080}:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  postgres_data:

@@ -1,0 +1,11 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:supermarket_tracker}
+    username: ${DB_USERNAME:supermarket}
+    password: ${DB_PASSWORD:supermarket}
+  jpa:
+    show-sql: true
+
+logging:
+  level:
+    org.hibernate.SQL: debug
