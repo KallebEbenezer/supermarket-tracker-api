@@ -21,12 +21,14 @@ services:
       context: .
     container_name: supermarket-tracker-api
     environment:
-      SPRING_PROFILES_ACTIVE: prod
-      DB_HOST: ${DB_HOST:-postgres}
-      DB_PORT: ${DB_PORT:-5432}
-      DB_NAME: ${DB_NAME:-supermarket_tracker}
-      DB_USERNAME: ${DB_USERNAME:-supermarket}
-      DB_PASSWORD: ${DB_PASSWORD:-supermarket}
+      # O banco do próprio Compose não exige SSL; produção deve sobrescrever para `prod`.
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-dev}
+      # A API do Compose sempre conversa com o PostgreSQL do próprio Compose.
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: ${POSTGRES_DB:-supermarket_tracker}
+      DB_USERNAME: ${POSTGRES_USER:-supermarket}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-supermarket}
     ports:
       - "${APP_PORT:-8080}:8080"
     depends_on:
