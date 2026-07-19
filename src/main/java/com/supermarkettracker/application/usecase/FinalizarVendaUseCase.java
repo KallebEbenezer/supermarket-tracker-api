@@ -98,8 +98,16 @@ public class FinalizarVendaUseCase {
         if (command.itens() == null || command.itens().isEmpty()) {
             throw new RegraDeDominioException("A venda deve possuir ao menos um item");
         }
+        if (command.itens().stream().anyMatch(java.util.Objects::isNull)) {
+            throw new RegraDeDominioException("Item da venda e obrigatorio");
+        }
         if (command.pagamentos() == null || command.pagamentos().isEmpty()) {
             throw new RegraDeDominioException("A venda deve possuir ao menos um pagamento");
+        }
+        for (PagamentoCheckoutCommand pagamento : command.pagamentos()) {
+            if (pagamento == null) throw new RegraDeDominioException("Pagamento e obrigatorio");
+            ValidacaoCommand.obrigatorio(pagamento.tipo(), "Tipo de pagamento");
+            ValidacaoCommand.positivo(pagamento.valor(), "Valor do pagamento");
         }
     }
 
