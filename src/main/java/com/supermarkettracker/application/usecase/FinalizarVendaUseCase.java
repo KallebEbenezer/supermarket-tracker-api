@@ -8,19 +8,12 @@ import com.supermarkettracker.application.mapper.VendaMapper;
 import com.supermarkettracker.application.validator.ValidacaoCommand;
 import com.supermarkettracker.domain.exception.EntidadeNaoEncontradaException;
 import com.supermarkettracker.domain.exception.RegraDeDominioException;
-import com.supermarkettracker.domain.gateway.CartaoGateway;
-import com.supermarkettracker.domain.gateway.PixGateway;
 import com.supermarkettracker.domain.model.ItemVenda;
 import com.supermarkettracker.domain.model.MovimentacaoEstoque;
-import com.supermarkettracker.domain.model.Pagamento;
-import com.supermarkettracker.domain.model.PagamentoCartao;
-import com.supermarkettracker.domain.model.PagamentoPix;
 import com.supermarkettracker.domain.model.Produto;
 import com.supermarkettracker.domain.model.Venda;
-import com.supermarkettracker.domain.model.enums.StatusPagamento;
 import com.supermarkettracker.domain.model.enums.StatusVenda;
 import com.supermarkettracker.domain.model.enums.TipoMovimentacaoEstoque;
-import com.supermarkettracker.domain.model.enums.TipoPagamento;
 import com.supermarkettracker.domain.model.valueobject.Dinheiro;
 import com.supermarkettracker.domain.model.valueobject.Identificador;
 import com.supermarkettracker.domain.model.valueobject.Quantidade;
@@ -31,28 +24,27 @@ import com.supermarkettracker.domain.repository.ProdutoRepository;
 import com.supermarkettracker.domain.repository.VendaRepository;
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import org.springframework.transaction.annotation.Transactional;
 
 public class FinalizarVendaUseCase {
     private final VendaRepository vendas;
     private final ProdutoRepository produtos;
-    private final PagamentoRepository pagamentos;
     private final MovimentacaoEstoqueRepository movimentacoes;
     private final DashboardRepository dashboard;
-    private final PixGateway pixGateway;
-    private final CartaoGateway cartaoGateway;
+    private final CheckoutPagamentoService checkoutPagamentos;
 
     public FinalizarVendaUseCase(VendaRepository vendas, ProdutoRepository produtos, PagamentoRepository pagamentos,
             MovimentacaoEstoqueRepository movimentacoes, DashboardRepository dashboard,
-            PixGateway pixGateway, CartaoGateway cartaoGateway) {
+            com.supermarkettracker.domain.gateway.PixGateway pixGateway,
+            com.supermarkettracker.domain.gateway.CartaoGateway cartaoGateway) {
         this.vendas = vendas;
         this.produtos = produtos;
-        this.pagamentos = pagamentos;
         this.movimentacoes = movimentacoes;
         this.dashboard = dashboard;
-        this.pixGateway = pixGateway;
-        this.cartaoGateway = cartaoGateway;
+        this.checkoutPagamentos = new CheckoutPagamentoService(pagamentos, pixGateway, cartaoGateway);
     }
 
     @Transactional
@@ -86,7 +78,7 @@ public class FinalizarVendaUseCase {
 
         List<ItemVenda> itensSalvos = itens.stream().map(item -> vincularAVenda(item, vendaCriada.id()))
                 .map(vendas::salvarItem).toList();
-        registrarPagamentos(vendaCriada, command.pagamentos());
+        checkoutPagamentos.processar(vendaCriada, command.pagamentos());
         venda = vendas.salvar(finalizar(vendaCriada));
         movimentarEstoque(venda, itensSalvos);
         dashboard.registrarVendaPaga(venda, itensSalvos);
@@ -137,68 +129,11 @@ public class FinalizarVendaUseCase {
                 new Dinheiro(subtotal.subtract(custo)), Instant.now());
     }
 
-    private void registrarPagamentos(Venda venda, List<PagamentoCheckoutCommand> comandos) {
-        for (PagamentoCheckoutCommand command : comandos) {
-            validarPagamento(command);
-            Identificador pagamentoId = Identificador.novo();
-            Instant agora = Instant.now();
-            Pagamento pagamento = new Pagamento(pagamentoId, venda.id(), identificador(command.contaBancariaId()),
-                    command.tipo(), new Dinheiro(command.valor()), StatusPagamento.APROVADO, agora,
-                    command.referencia(), agora, agora);
-            if (command.tipo() == TipoPagamento.PIX) {
-                PixGateway.CobrancaPix cobranca = pixGateway.criarCobranca(pagamentoId, pagamento.valor());
-                exigirAprovado(cobranca.status());
-                pagamentos.salvarPix(comReferencia(pagamento, cobranca.transacaoId()), new PagamentoPix(pagamentoId,
-                        cobranca.qrCode(), cobranca.copiaECola(), cobranca.transacaoId(), cobranca.gateway(),
-                        cobranca.transacaoId(), cobranca.status(), agora));
-            } else if (command.tipo() == TipoPagamento.CARTAO) {
-                CartaoGateway.TransacaoCartao transacao = cartaoGateway.processar(pagamentoId, pagamento.valor(),
-                        command.modalidadeCartao(), command.parcelas());
-                exigirAprovado(transacao.status());
-                pagamentos.salvarCartao(comReferencia(pagamento, transacao.transacaoId()), new PagamentoCartao(
-                        pagamentoId, command.modalidadeCartao(), command.parcelas(), null, null,
-                        transacao.codigoAutorizacao(), null, transacao.gateway(), transacao.transacaoId(),
-                        transacao.status()));
-            } else {
-                pagamentos.salvar(pagamento);
-            }
-        }
-    }
-
-    private void validarPagamento(PagamentoCheckoutCommand pagamento) {
-        ValidacaoCommand.obrigatorio(pagamento.tipo(), "Tipo de pagamento");
-        ValidacaoCommand.positivo(pagamento.valor(), "Valor do pagamento");
-        if (pagamento.tipo() != TipoPagamento.DINHEIRO && pagamento.tipo() != TipoPagamento.PIX
-                && pagamento.tipo() != TipoPagamento.CARTAO) {
-            throw new RegraDeDominioException("Tipo de pagamento nao suportado");
-        }
-        if (pagamento.tipo() == TipoPagamento.CARTAO) {
-            ValidacaoCommand.obrigatorio(pagamento.modalidadeCartao(), "Modalidade do cartao");
-            if (pagamento.parcelas() < 1) throw new RegraDeDominioException("Parcelas deve ser ao menos 1");
-            if (pagamento.modalidadeCartao() == com.supermarkettracker.domain.model.enums.ModalidadeCartao.DEBITO
-                    && pagamento.parcelas() != 1) {
-                throw new RegraDeDominioException("Pagamento no debito deve possuir uma parcela");
-            }
-        }
-    }
-
-    private void exigirAprovado(String status) {
-        if (!"APROVADO".equalsIgnoreCase(status)) {
-            throw new RegraDeDominioException("Pagamento nao foi aprovado pelo gateway");
-        }
-    }
-
-    private Pagamento comReferencia(Pagamento pagamento, String referencia) {
-        return new Pagamento(pagamento.id(), pagamento.vendaId(), pagamento.contaBancariaId(), pagamento.tipo(),
-                pagamento.valor(), pagamento.status(), pagamento.recebidoEm(), referencia, pagamento.criadoEm(),
-                pagamento.atualizadoEm());
-    }
-
     private void movimentarEstoque(Venda venda, List<ItemVenda> itens) {
+        Map<Identificador, Produto> produtosPorId = new HashMap<>();
         for (ItemVenda item : itens) {
             if (item.produtoId() == null) continue;
-            Produto produto = produtos.buscarPorId(item.produtoId())
-                    .orElseThrow(() -> new EntidadeNaoEncontradaException("Produto nao encontrado"));
+            Produto produto = produtosPorId.computeIfAbsent(item.produtoId(), this::buscarProduto);
             if (!produto.empresaId().equals(venda.empresaId())) {
                 throw new RegraDeDominioException("Produto nao pertence a empresa da venda");
             }
@@ -209,6 +144,11 @@ public class FinalizarVendaUseCase {
                     item.precoCompraUnitario(), "Baixa automatica da venda " + venda.numero(),
                     "VENDA-" + venda.numero() + "-ITEM-" + item.numero(), Instant.now()));
         }
+    }
+
+    private Produto buscarProduto(Identificador produtoId) {
+        return produtos.buscarPorId(produtoId)
+                .orElseThrow(() -> new EntidadeNaoEncontradaException("Produto nao encontrado"));
     }
 
     private void validarTotalPagamentos(List<PagamentoCheckoutCommand> pagamentos, BigDecimal total) {

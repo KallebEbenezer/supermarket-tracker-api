@@ -56,6 +56,27 @@ class FinalizarVendaUseCaseTest {
         assertThatThrownBy(() -> uc.executar(invalido)).isInstanceOf(RegraDeDominioException.class).hasMessageContaining("total dos pagamentos");
     }
 
+    @Test void finalizaVenda_consultaProdutoUmaVezQuandoEleApareceEmMaisDeUmItem() {
+        VendaRepository vendas = mock(VendaRepository.class); ProdutoRepository produtos = mock(ProdutoRepository.class);
+        PagamentoRepository pagamentos = mock(PagamentoRepository.class); MovimentacaoEstoqueRepository movimentacoes = mock(MovimentacaoEstoqueRepository.class);
+        when(vendas.salvar(any())).thenAnswer(i -> i.getArgument(0));
+        when(vendas.salvarItem(any())).thenAnswer(i -> i.getArgument(0));
+        when(pagamentos.salvar(any())).thenAnswer(i -> i.getArgument(0));
+        when(produtos.buscarPorId(any())).thenReturn(Optional.of(produto()));
+        when(movimentacoes.salvar(any())).thenAnswer(i -> i.getArgument(0));
+        var itens = List.of(item(), new ItemVendaCheckoutCommand(produto, 2, "Arroz", "789", "UN",
+                BigDecimal.valueOf(2), BigDecimal.TEN, BigDecimal.valueOf(6), BigDecimal.ZERO, BigDecimal.ZERO));
+        var pagamento = new PagamentoCheckoutCommand(null, TipoPagamento.DINHEIRO, BigDecimal.valueOf(40), null,
+                (short) 1, null);
+
+        useCase(vendas, produtos, pagamentos, movimentacoes, mock(DashboardRepository.class), mock(PixGateway.class),
+                mock(CartaoGateway.class)).executar(new FinalizarVendaCommand(empresa, loja, null, usuario, null,
+                        1, BigDecimal.ZERO, BigDecimal.ZERO, null, itens, List.of(pagamento)));
+
+        verify(produtos, times(1)).buscarPorId(new Identificador(produto));
+        verify(movimentacoes, times(2)).salvar(any());
+    }
+
     private FinalizarVendaUseCase useCase(VendaRepository v, ProdutoRepository p, PagamentoRepository pg, MovimentacaoEstoqueRepository m, DashboardRepository d, PixGateway pix, CartaoGateway card) { return new FinalizarVendaUseCase(v, p, pg, m, d, pix, card); }
     private FinalizarVendaCommand command(TipoPagamento tipo) { return new FinalizarVendaCommand(empresa, loja, null, usuario, null, 1, BigDecimal.ZERO, BigDecimal.ZERO, null, List.of(item()), List.of(new PagamentoCheckoutCommand(null, tipo, BigDecimal.valueOf(20), null, (short) 1, null))); }
     private ItemVendaCheckoutCommand item() { return new ItemVendaCheckoutCommand(produto, 1, "Arroz", "789", "UN", BigDecimal.valueOf(2), BigDecimal.TEN, BigDecimal.valueOf(6), BigDecimal.ZERO, BigDecimal.ZERO); }
