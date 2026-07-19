@@ -32,6 +32,7 @@ public record FinalizarVendaRequest(@NotNull UUID empresaId, @NotNull UUID lojaI
 
     private PagamentoCheckoutCommand pagamentoCommand(PagamentoRequest pagamento) {
         return new PagamentoCheckoutCommand(pagamento.contaBancariaId(), pagamento.tipo(), pagamento.valor(),
-                pagamento.modalidadeCartao(), pagamento.parcelas(), pagamento.referencia());
+                pagamento.modalidadeCartao(), pagamento.parcelas() == null ? 0 : pagamento.parcelas(),
+                pagamento.referencia());
     }
 }
