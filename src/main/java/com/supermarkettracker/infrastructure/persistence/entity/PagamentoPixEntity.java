@@ -1,0 +1,3 @@
+package com.supermarkettracker.infrastructure.persistence.entity;
+import jakarta.persistence.*; import java.time.Instant; import java.util.UUID;
+@Entity @Table(name="pagamento_pix") public class PagamentoPixEntity { @Id @Column(name="pagamento_id") public UUID pagamentoId; @Column(name="qr_code") public String qrCode; @Column(name="copia_cola") public String copiaCola; @Column(length=100) public String txid; @Column(length=80) public String gateway; @Column(name="gateway_transacao_id",length=150) public String gatewayTransacaoId; @Column(name="status_gateway",length=50) public String statusGateway; @Column(name="pago_em") public Instant pagoEm; public PagamentoPixEntity() {} }
