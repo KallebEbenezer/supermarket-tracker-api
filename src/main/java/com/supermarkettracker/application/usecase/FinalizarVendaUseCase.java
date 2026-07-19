@@ -89,7 +89,7 @@ public class FinalizarVendaUseCase {
         registrarPagamentos(vendaCriada, command.pagamentos());
         venda = vendas.salvar(finalizar(vendaCriada));
         movimentarEstoque(venda, itensSalvos);
-        dashboard.registrarVendaPaga(venda);
+        dashboard.registrarVendaPaga(venda, itensSalvos);
         return VendaMapper.paraDto(venda);
     }
 
