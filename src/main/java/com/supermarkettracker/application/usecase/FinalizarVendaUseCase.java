@@ -8,10 +8,13 @@ import com.supermarkettracker.application.mapper.VendaMapper;
 import com.supermarkettracker.application.validator.ValidacaoCommand;
 import com.supermarkettracker.domain.exception.EntidadeNaoEncontradaException;
 import com.supermarkettracker.domain.exception.RegraDeDominioException;
-import com.supermarkettracker.domain.gateway.ProcessadorPagamentoGateway;
+import com.supermarkettracker.domain.gateway.CartaoGateway;
+import com.supermarkettracker.domain.gateway.PixGateway;
 import com.supermarkettracker.domain.model.ItemVenda;
 import com.supermarkettracker.domain.model.MovimentacaoEstoque;
 import com.supermarkettracker.domain.model.Pagamento;
+import com.supermarkettracker.domain.model.PagamentoCartao;
+import com.supermarkettracker.domain.model.PagamentoPix;
 import com.supermarkettracker.domain.model.Produto;
 import com.supermarkettracker.domain.model.Venda;
 import com.supermarkettracker.domain.model.enums.StatusPagamento;
@@ -37,17 +40,19 @@ public class FinalizarVendaUseCase {
     private final PagamentoRepository pagamentos;
     private final MovimentacaoEstoqueRepository movimentacoes;
     private final DashboardRepository dashboard;
-    private final ProcessadorPagamentoGateway processador;
+    private final PixGateway pixGateway;
+    private final CartaoGateway cartaoGateway;
 
     public FinalizarVendaUseCase(VendaRepository vendas, ProdutoRepository produtos, PagamentoRepository pagamentos,
             MovimentacaoEstoqueRepository movimentacoes, DashboardRepository dashboard,
-            ProcessadorPagamentoGateway processador) {
+            PixGateway pixGateway, CartaoGateway cartaoGateway) {
         this.vendas = vendas;
         this.produtos = produtos;
         this.pagamentos = pagamentos;
         this.movimentacoes = movimentacoes;
         this.dashboard = dashboard;
-        this.processador = processador;
+        this.pixGateway = pixGateway;
+        this.cartaoGateway = cartaoGateway;
     }
 
     @Transactional
@@ -134,22 +139,59 @@ public class FinalizarVendaUseCase {
 
     private void registrarPagamentos(Venda venda, List<PagamentoCheckoutCommand> comandos) {
         for (PagamentoCheckoutCommand command : comandos) {
-            ValidacaoCommand.obrigatorio(command.tipo(), "Tipo de pagamento");
-            ValidacaoCommand.positivo(command.valor(), "Valor do pagamento");
+            validarPagamento(command);
             Identificador pagamentoId = Identificador.novo();
-            String referencia = command.referencia();
+            Instant agora = Instant.now();
+            Pagamento pagamento = new Pagamento(pagamentoId, venda.id(), identificador(command.contaBancariaId()),
+                    command.tipo(), new Dinheiro(command.valor()), StatusPagamento.APROVADO, agora,
+                    command.referencia(), agora, agora);
             if (command.tipo() == TipoPagamento.PIX) {
-                referencia = processador.processarPix(pagamentoId, new Dinheiro(command.valor())).referenciaExterna();
+                PixGateway.CobrancaPix cobranca = pixGateway.criarCobranca(pagamentoId, pagamento.valor());
+                exigirAprovado(cobranca.status());
+                pagamentos.salvarPix(comReferencia(pagamento, cobranca.transacaoId()), new PagamentoPix(pagamentoId,
+                        cobranca.qrCode(), cobranca.copiaECola(), cobranca.transacaoId(), cobranca.gateway(),
+                        cobranca.transacaoId(), cobranca.status(), agora));
             } else if (command.tipo() == TipoPagamento.CARTAO) {
-                ValidacaoCommand.obrigatorio(command.modalidadeCartao(), "Modalidade do cartao");
-                if (command.parcelas() < 1) throw new IllegalArgumentException("Parcelas deve ser ao menos 1");
-                referencia = processador.processarCartao(pagamentoId, new Dinheiro(command.valor()),
-                        command.modalidadeCartao(), command.parcelas()).referenciaExterna();
+                CartaoGateway.TransacaoCartao transacao = cartaoGateway.processar(pagamentoId, pagamento.valor(),
+                        command.modalidadeCartao(), command.parcelas());
+                exigirAprovado(transacao.status());
+                pagamentos.salvarCartao(comReferencia(pagamento, transacao.transacaoId()), new PagamentoCartao(
+                        pagamentoId, command.modalidadeCartao(), command.parcelas(), null, null,
+                        transacao.codigoAutorizacao(), null, transacao.gateway(), transacao.transacaoId(),
+                        transacao.status()));
+            } else {
+                pagamentos.salvar(pagamento);
             }
-            pagamentos.salvar(new Pagamento(pagamentoId, venda.id(), identificador(command.contaBancariaId()),
-                    command.tipo(), new Dinheiro(command.valor()), StatusPagamento.APROVADO, Instant.now(),
-                    referencia, Instant.now(), Instant.now()));
         }
+    }
+
+    private void validarPagamento(PagamentoCheckoutCommand pagamento) {
+        ValidacaoCommand.obrigatorio(pagamento.tipo(), "Tipo de pagamento");
+        ValidacaoCommand.positivo(pagamento.valor(), "Valor do pagamento");
+        if (pagamento.tipo() != TipoPagamento.DINHEIRO && pagamento.tipo() != TipoPagamento.PIX
+                && pagamento.tipo() != TipoPagamento.CARTAO) {
+            throw new RegraDeDominioException("Tipo de pagamento nao suportado");
+        }
+        if (pagamento.tipo() == TipoPagamento.CARTAO) {
+            ValidacaoCommand.obrigatorio(pagamento.modalidadeCartao(), "Modalidade do cartao");
+            if (pagamento.parcelas() < 1) throw new RegraDeDominioException("Parcelas deve ser ao menos 1");
+            if (pagamento.modalidadeCartao() == com.supermarkettracker.domain.model.enums.ModalidadeCartao.DEBITO
+                    && pagamento.parcelas() != 1) {
+                throw new RegraDeDominioException("Pagamento no debito deve possuir uma parcela");
+            }
+        }
+    }
+
+    private void exigirAprovado(String status) {
+        if (!"APROVADO".equalsIgnoreCase(status)) {
+            throw new RegraDeDominioException("Pagamento nao foi aprovado pelo gateway");
+        }
+    }
+
+    private Pagamento comReferencia(Pagamento pagamento, String referencia) {
+        return new Pagamento(pagamento.id(), pagamento.vendaId(), pagamento.contaBancariaId(), pagamento.tipo(),
+                pagamento.valor(), pagamento.status(), pagamento.recebidoEm(), referencia, pagamento.criadoEm(),
+                pagamento.atualizadoEm());
     }
 
     private void movimentarEstoque(Venda venda, List<ItemVenda> itens) {

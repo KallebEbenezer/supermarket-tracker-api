@@ -7,5 +7,5 @@ import com.supermarkettracker.domain.model.valueobject.Identificador;
 public interface PixGateway {
     CobrancaPix criarCobranca(Identificador pagamentoId, Dinheiro valor);
 
-    record CobrancaPix(String referenciaExterna, String status, String qrCode, String copiaECola) { }
+    record CobrancaPix(String gateway, String transacaoId, String status, String qrCode, String copiaECola) { }
 }

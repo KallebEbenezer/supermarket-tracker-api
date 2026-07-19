@@ -1,6 +1,8 @@
 package com.supermarkettracker.infrastructure.config;
 
 import com.supermarkettracker.application.usecase.*;
+import com.supermarkettracker.domain.gateway.CartaoGateway;
+import com.supermarkettracker.domain.gateway.PixGateway;
 import com.supermarkettracker.domain.gateway.ProcessadorPagamentoGateway;
 import com.supermarkettracker.domain.repository.*;
 import org.springframework.context.annotation.Bean;
@@ -25,8 +27,8 @@ public class ApplicationUseCaseConfiguration {
             ProcessadorPagamentoGateway processador) { return new RegistrarPagamentoUseCase(pagamentos, vendas, processador); }
     @Bean FinalizarVendaUseCase finalizarVendaUseCase(VendaRepository vendas, ProdutoRepository produtos,
             PagamentoRepository pagamentos, MovimentacaoEstoqueRepository movimentacoes, DashboardRepository dashboard,
-            ProcessadorPagamentoGateway processador) { return new FinalizarVendaUseCase(vendas, produtos, pagamentos,
-                    movimentacoes, dashboard, processador); }
+            PixGateway pixGateway, CartaoGateway cartaoGateway) { return new FinalizarVendaUseCase(vendas, produtos,
+                    pagamentos, movimentacoes, dashboard, pixGateway, cartaoGateway); }
     @Bean RegistrarMovimentacaoEstoqueUseCase registrarMovimentacaoEstoqueUseCase(ProdutoRepository produtos,
             MovimentacaoEstoqueRepository movimentacoes) { return new RegistrarMovimentacaoEstoqueUseCase(produtos, movimentacoes); }
 }

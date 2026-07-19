@@ -9,5 +9,5 @@ public interface CartaoGateway {
     TransacaoCartao processar(Identificador pagamentoId, Dinheiro valor,
                               ModalidadeCartao modalidade, short parcelas);
 
-    record TransacaoCartao(String referenciaExterna, String status, String codigoAutorizacao) { }
+    record TransacaoCartao(String gateway, String transacaoId, String status, String codigoAutorizacao) { }
 }

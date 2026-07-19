@@ -11,6 +11,6 @@ public class PixMockAdapter implements PixGateway {
     public CobrancaPix criarCobranca(Identificador pagamentoId, Dinheiro valor) {
         String referencia = "mock-pix-" + pagamentoId.valor();
         String copiaECola = "PIX-MOCK:" + referencia + ":" + valor.valor().toPlainString();
-        return new CobrancaPix(referencia, "APROVADO", null, copiaECola);
+        return new CobrancaPix("mock", referencia, "APROVADO", null, copiaECola);
     }
 }

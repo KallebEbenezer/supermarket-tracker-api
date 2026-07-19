@@ -22,13 +22,13 @@ public class ProcessadorPagamentoMockAdapter implements ProcessadorPagamentoGate
     @Override
     public ResultadoPagamento processarPix(Identificador pagamentoId, Dinheiro valor) {
         PixGateway.CobrancaPix cobranca = pixGateway.criarCobranca(pagamentoId, valor);
-        return new ResultadoPagamento(cobranca.referenciaExterna(), cobranca.status(), null);
+        return new ResultadoPagamento(cobranca.transacaoId(), cobranca.status(), null);
     }
 
     @Override
     public ResultadoPagamento processarCartao(Identificador pagamentoId, Dinheiro valor,
                                               ModalidadeCartao modalidade, short parcelas) {
         CartaoGateway.TransacaoCartao transacao = cartaoGateway.processar(pagamentoId, valor, modalidade, parcelas);
-        return new ResultadoPagamento(transacao.referenciaExterna(), transacao.status(), transacao.codigoAutorizacao());
+        return new ResultadoPagamento(transacao.transacaoId(), transacao.status(), transacao.codigoAutorizacao());
     }
 }

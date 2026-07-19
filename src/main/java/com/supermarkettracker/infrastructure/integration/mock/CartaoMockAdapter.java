@@ -13,6 +13,6 @@ public class CartaoMockAdapter implements CartaoGateway {
                                      ModalidadeCartao modalidade, short parcelas) {
         String referencia = "mock-cartao-" + pagamentoId.valor();
         String autorizacao = "MOCK-" + pagamentoId.valor().toString().substring(0, 8).toUpperCase();
-        return new TransacaoCartao(referencia, "APROVADO", autorizacao);
+        return new TransacaoCartao("mock", referencia, "APROVADO", autorizacao);
     }
 }
