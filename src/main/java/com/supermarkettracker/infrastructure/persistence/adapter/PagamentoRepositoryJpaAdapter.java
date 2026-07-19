@@ -1,3 +1,63 @@
 package com.supermarkettracker.infrastructure.persistence.adapter;
-import com.supermarkettracker.domain.model.*; import com.supermarkettracker.domain.model.valueobject.Identificador; import com.supermarkettracker.domain.repository.PagamentoRepository; import com.supermarkettracker.infrastructure.persistence.mapper.PagamentoPersistenceMapper; import com.supermarkettracker.infrastructure.persistence.repository.PagamentoJpaRepository; import org.springframework.stereotype.Repository; import java.util.*;
-@Repository public class PagamentoRepositoryJpaAdapter implements PagamentoRepository { private final PagamentoJpaRepository jpa; private final PagamentoPersistenceMapper mapper; public PagamentoRepositoryJpaAdapter(PagamentoJpaRepository j,PagamentoPersistenceMapper m){jpa=j;mapper=m;} public Pagamento salvar(Pagamento x){return mapper.toDomain(jpa.save(mapper.toEntity(x)));} public Optional<Pagamento> buscarPorId(Identificador id){return jpa.findById(id.valor()).map(mapper::toDomain);} public List<Pagamento> listarPorVenda(Identificador vendaId){return jpa.findByVendaIdOrderByCriadoEmAsc(vendaId.valor()).stream().map(mapper::toDomain).toList();} }
+import com.supermarkettracker.domain.model.Pagamento;
+import com.supermarkettracker.domain.model.PagamentoCartao;
+import com.supermarkettracker.domain.model.PagamentoPix;
+import com.supermarkettracker.domain.model.valueobject.Identificador;
+import com.supermarkettracker.domain.repository.PagamentoRepository;
+import com.supermarkettracker.infrastructure.persistence.mapper.CadastrosPersistenceMapper;
+import com.supermarkettracker.infrastructure.persistence.mapper.PagamentoPersistenceMapper;
+import com.supermarkettracker.infrastructure.persistence.repository.PagamentoCartaoJpaRepository;
+import com.supermarkettracker.infrastructure.persistence.repository.PagamentoJpaRepository;
+import com.supermarkettracker.infrastructure.persistence.repository.PagamentoPixJpaRepository;
+import java.util.List;
+import java.util.Optional;
+import org.springframework.stereotype.Repository;
+
+@Repository
+public class PagamentoRepositoryJpaAdapter implements PagamentoRepository {
+    private final PagamentoJpaRepository pagamentos;
+    private final PagamentoPixJpaRepository pagamentosPix;
+    private final PagamentoCartaoJpaRepository pagamentosCartao;
+    private final PagamentoPersistenceMapper pagamentoMapper;
+    private final CadastrosPersistenceMapper cadastrosMapper;
+
+    public PagamentoRepositoryJpaAdapter(PagamentoJpaRepository pagamentos, PagamentoPixJpaRepository pagamentosPix,
+            PagamentoCartaoJpaRepository pagamentosCartao, PagamentoPersistenceMapper pagamentoMapper,
+            CadastrosPersistenceMapper cadastrosMapper) {
+        this.pagamentos = pagamentos;
+        this.pagamentosPix = pagamentosPix;
+        this.pagamentosCartao = pagamentosCartao;
+        this.pagamentoMapper = pagamentoMapper;
+        this.cadastrosMapper = cadastrosMapper;
+    }
+
+    @Override
+    public Pagamento salvar(Pagamento pagamento) {
+        return pagamentoMapper.toDomain(pagamentos.save(pagamentoMapper.toEntity(pagamento)));
+    }
+
+    @Override
+    public Pagamento salvarPix(Pagamento pagamento, PagamentoPix pix) {
+        Pagamento salvo = salvar(pagamento);
+        pagamentosPix.save(cadastrosMapper.toEntity(pix));
+        return salvo;
+    }
+
+    @Override
+    public Pagamento salvarCartao(Pagamento pagamento, PagamentoCartao cartao) {
+        Pagamento salvo = salvar(pagamento);
+        pagamentosCartao.save(cadastrosMapper.toEntity(cartao));
+        return salvo;
+    }
+
+    @Override
+    public Optional<Pagamento> buscarPorId(Identificador id) {
+        return pagamentos.findById(id.valor()).map(pagamentoMapper::toDomain);
+    }
+
+    @Override
+    public List<Pagamento> listarPorVenda(Identificador vendaId) {
+        return pagamentos.findByVendaIdOrderByCriadoEmAsc(vendaId.valor()).stream()
+                .map(pagamentoMapper::toDomain).toList();
+    }
+}
