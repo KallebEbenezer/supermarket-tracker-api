@@ -22,6 +22,7 @@ public class ApplicationUseCaseConfiguration {
     @Bean FecharSessaoCaixaUseCase fecharSessaoCaixaUseCase(CaixaRepository repository) { return new FecharSessaoCaixaUseCase(repository); }
     @Bean IniciarVendaUseCase iniciarVendaUseCase(VendaRepository repository) { return new IniciarVendaUseCase(repository); }
     @Bean BuscarVendaUseCase buscarVendaUseCase(VendaRepository repository) { return new BuscarVendaUseCase(repository); }
+    @Bean ConsultarDashboardUseCase consultarDashboardUseCase(DashboardConsultaRepository repository) { return new ConsultarDashboardUseCase(repository); }
     @Bean AdicionarItemVendaUseCase adicionarItemVendaUseCase(VendaRepository vendas) { return new AdicionarItemVendaUseCase(vendas); }
     @Bean RegistrarPagamentoUseCase registrarPagamentoUseCase(PagamentoRepository pagamentos, VendaRepository vendas,
             ProcessadorPagamentoGateway processador) { return new RegistrarPagamentoUseCase(pagamentos, vendas, processador); }
