@@ -7,10 +7,12 @@ import com.supermarkettracker.application.usecase.CadastrarProdutoUseCase;
 import com.supermarkettracker.infrastructure.web.dto.ApiResponse;
 import com.supermarkettracker.infrastructure.web.request.ProdutoRequest;
 import jakarta.validation.Valid;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.UUID;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
+@Tag(name = "Produtos")
 @RestController @RequestMapping("/api/v1/produtos")
 public class ProdutoController {
     private final CadastrarProdutoUseCase cadastrarProduto; private final BuscarProdutoUseCase buscarProduto;

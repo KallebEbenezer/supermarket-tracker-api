@@ -4,12 +4,14 @@ import com.supermarkettracker.application.query.ConsultarDashboardQuery;
 import com.supermarkettracker.application.usecase.ConsultarDashboardUseCase;
 import com.supermarkettracker.infrastructure.web.dto.ApiResponse;
 import com.supermarkettracker.infrastructure.web.dto.DashboardResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.UUID;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+@Tag(name = "Dashboard")
 @RestController
 @RequestMapping("/api/v1/dashboard")
 public class DashboardController {

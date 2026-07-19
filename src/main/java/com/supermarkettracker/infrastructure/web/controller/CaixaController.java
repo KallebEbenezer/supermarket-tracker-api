@@ -4,10 +4,12 @@ import com.supermarkettracker.application.usecase.*;
 import com.supermarkettracker.infrastructure.web.dto.*;
 import com.supermarkettracker.infrastructure.web.request.*;
 import jakarta.validation.Valid;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.UUID;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
+@Tag(name = "Caixa")
 @RestController @RequestMapping("/api/v1/caixas")
 public class CaixaController {
     private final CadastrarCaixaUseCase cadastrarCaixa; private final AbrirSessaoCaixaUseCase abrirSessao; private final FecharSessaoCaixaUseCase fecharSessao;

@@ -7,11 +7,13 @@ import com.supermarkettracker.application.usecase.ListarLojasUseCase;
 import com.supermarkettracker.infrastructure.web.dto.ApiResponse;
 import com.supermarkettracker.infrastructure.web.request.LojaRequest;
 import jakarta.validation.Valid;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.List;
 import java.util.UUID;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
+@Tag(name = "Lojas")
 @RestController @RequestMapping("/api/v1/lojas")
 public class LojaController {
     private final CadastrarLojaUseCase cadastrarLoja; private final ListarLojasUseCase listarLojas;

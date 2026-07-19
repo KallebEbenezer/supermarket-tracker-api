@@ -6,10 +6,12 @@ import com.supermarkettracker.application.usecase.*;
 import com.supermarkettracker.infrastructure.web.dto.*;
 import com.supermarkettracker.infrastructure.web.request.*;
 import jakarta.validation.Valid;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.UUID;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
+@Tag(name = "Vendas")
 @RestController @RequestMapping("/api/v1/vendas")
 public class VendaController {
     private final BuscarVendaUseCase buscarVenda; private final FinalizarVendaUseCase finalizarVenda;
