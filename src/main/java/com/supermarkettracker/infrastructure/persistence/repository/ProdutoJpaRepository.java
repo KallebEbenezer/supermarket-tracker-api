@@ -1,0 +1,3 @@
+package com.supermarkettracker.infrastructure.persistence.repository;
+import com.supermarkettracker.infrastructure.persistence.entity.ProdutoEntity; import org.springframework.data.domain.*; import org.springframework.data.jpa.repository.*; import org.springframework.data.repository.query.Param; import java.util.*;
+public interface ProdutoJpaRepository extends JpaRepository<ProdutoEntity, UUID>, JpaSpecificationExecutor<ProdutoEntity> { Optional<ProdutoEntity> findByEmpresaIdAndCodigoBarras(UUID empresaId, String codigoBarras); @Query("select p from ProdutoEntity p where p.empresaId=:empresaId and lower(p.nome) like lower(concat('%', :termo, '%')) order by p.nome") List<ProdutoEntity> buscarPorNome(@Param("empresaId") UUID empresaId, @Param("termo") String termo); }

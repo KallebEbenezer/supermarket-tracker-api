@@ -1,0 +1,6 @@
+package com.supermarkettracker.infrastructure.persistence.repository;
+import com.supermarkettracker.infrastructure.persistence.entity.*; import com.supermarkettracker.infrastructure.persistence.filter.*; import org.springframework.data.jpa.domain.Specification;
+public final class PersistenceSpecifications { private PersistenceSpecifications() {}
+ public static Specification<ProdutoEntity> produtos(ProdutoFiltro f) { return (r,q,b) -> b.and(f.empresaId()==null?b.conjunction():b.equal(r.get("empresaId"),f.empresaId()), f.status()==null?b.conjunction():b.equal(r.get("status"),f.status()), f.categoriaId()==null?b.conjunction():b.equal(r.get("categoriaId"),f.categoriaId()), f.termo()==null||f.termo().isBlank()?b.conjunction():b.like(b.lower(r.get("nome")), "%"+f.termo().toLowerCase()+"%")); }
+ public static Specification<VendaEntity> vendas(VendaFiltro f) { return (r,q,b) -> b.and(f.empresaId()==null?b.conjunction():b.equal(r.get("empresaId"),f.empresaId()), f.lojaId()==null?b.conjunction():b.equal(r.get("lojaId"),f.lojaId()), f.clienteId()==null?b.conjunction():b.equal(r.get("clienteId"),f.clienteId()), f.status()==null?b.conjunction():b.equal(r.get("status"),f.status()), f.inicio()==null?b.conjunction():b.greaterThanOrEqualTo(r.get("criadoEm"),f.inicio()), f.fim()==null?b.conjunction():b.lessThanOrEqualTo(r.get("criadoEm"),f.fim())); }
+}
