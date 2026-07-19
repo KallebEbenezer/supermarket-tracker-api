@@ -23,6 +23,10 @@ public class ApplicationUseCaseConfiguration {
     @Bean AdicionarItemVendaUseCase adicionarItemVendaUseCase(VendaRepository vendas) { return new AdicionarItemVendaUseCase(vendas); }
     @Bean RegistrarPagamentoUseCase registrarPagamentoUseCase(PagamentoRepository pagamentos, VendaRepository vendas,
             ProcessadorPagamentoGateway processador) { return new RegistrarPagamentoUseCase(pagamentos, vendas, processador); }
+    @Bean FinalizarVendaUseCase finalizarVendaUseCase(VendaRepository vendas, ProdutoRepository produtos,
+            PagamentoRepository pagamentos, MovimentacaoEstoqueRepository movimentacoes, DashboardRepository dashboard,
+            ProcessadorPagamentoGateway processador) { return new FinalizarVendaUseCase(vendas, produtos, pagamentos,
+                    movimentacoes, dashboard, processador); }
     @Bean RegistrarMovimentacaoEstoqueUseCase registrarMovimentacaoEstoqueUseCase(ProdutoRepository produtos,
             MovimentacaoEstoqueRepository movimentacoes) { return new RegistrarMovimentacaoEstoqueUseCase(produtos, movimentacoes); }
 }
