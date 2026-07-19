@@ -1,8 +1,10 @@
 package com.supermarkettracker.infrastructure.persistence.converter;
 import com.supermarkettracker.domain.model.valueobject.*;
 import org.mapstruct.Named;
+import org.springframework.stereotype.Component;
 import java.math.BigDecimal; import java.util.UUID;
 
+@Component
 public class DomainValueConverter {
  public UUID idToUuid(Identificador value) { return value == null ? null : value.valor(); }
  public Identificador uuidToId(UUID value) { return value == null ? null : new Identificador(value); }
