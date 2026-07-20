@@ -18,6 +18,28 @@ docker compose logs -f app
 docker compose down
 ```
 
+### Comandos do dia a dia no Docker
+
+O container `app` executa um JAR criado durante o build da imagem; o código-fonte não é montado como volume. Portanto, após alterar arquivos Java, recursos em `src/`, o `pom.xml` ou o `Dockerfile`, reconstrua a API sem apagar o banco:
+
+```bash
+docker compose up -d --build app
+```
+
+Para iniciar o ambiente pela primeira vez, ou caso os containers estejam parados:
+
+```bash
+docker compose up -d --build
+```
+
+Para acompanhar a inicialização da API e obter a senha temporária do Basic Auth:
+
+```bash
+docker compose logs -f app
+```
+
+Use `docker compose restart app` somente quando a imagem não mudou, por exemplo após alterar uma variável de ambiente já aplicada ao container. Não é necessário reiniciar o serviço `postgres` para alterações no código da API. `docker compose down -v` remove também o volume do banco e, por isso, apaga os dados locais.
+
 O Compose usa o perfil `dev` por padrão e conecta a API exclusivamente ao PostgreSQL local do próprio Compose. Para executar contra infraestrutura externa, inicie a aplicação fora do Compose com `SPRING_PROFILES_ACTIVE=prod` e as variáveis `DB_*`; o perfil `prod` usa SSL.
 
 Para remover também o volume local do banco, execute `docker compose down -v`. Isso apaga os dados do ambiente Docker local.
