@@ -13,7 +13,7 @@ public class ApplicationUseCaseConfiguration {
     @Bean CadastrarEmpresaUseCase cadastrarEmpresaUseCase(EmpresaRepository repository) { return new CadastrarEmpresaUseCase(repository); }
     @Bean CadastrarLojaUseCase cadastrarLojaUseCase(LojaRepository repository) { return new CadastrarLojaUseCase(repository); }
     @Bean ListarLojasUseCase listarLojasUseCase(LojaRepository repository) { return new ListarLojasUseCase(repository); }
-    @Bean CadastrarProdutoUseCase cadastrarProdutoUseCase(ProdutoRepository repository) { return new CadastrarProdutoUseCase(repository); }
+    @Bean CadastrarProdutoUseCase cadastrarProdutoUseCase(ProdutoRepository produtos, EmpresaRepository empresas) { return new CadastrarProdutoUseCase(produtos, empresas); }
     @Bean BuscarProdutoUseCase buscarProdutoUseCase(ProdutoRepository repository) { return new BuscarProdutoUseCase(repository); }
     @Bean CadastrarUsuarioUseCase cadastrarUsuarioUseCase(UsuarioRepository repository) { return new CadastrarUsuarioUseCase(repository); }
     @Bean CadastrarClienteUseCase cadastrarClienteUseCase(ClienteRepository repository) { return new CadastrarClienteUseCase(repository); }

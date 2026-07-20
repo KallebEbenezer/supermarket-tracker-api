@@ -44,15 +44,25 @@ class UseCasesTest {
     }
 
     @Test void cadastrarProduto_salvaQuandoCodigoAindaNaoExiste() {
-        ProdutoRepository repo = mock(ProdutoRepository.class); when(repo.buscarPorCodigoBarras(any(), any())).thenReturn(Optional.empty()); when(repo.salvar(any())).thenAnswer(i -> i.getArgument(0));
-        var result = new CadastrarProdutoUseCase(repo).executar(produtoCommand());
+        ProdutoRepository repo = mock(ProdutoRepository.class); EmpresaRepository empresas = mock(EmpresaRepository.class); when(empresas.buscarPorId(any())).thenReturn(Optional.of(mock(Empresa.class))); when(repo.buscarPorCodigoBarras(any(), any())).thenReturn(Optional.empty()); when(repo.salvar(any())).thenAnswer(i -> i.getArgument(0));
+        var result = new CadastrarProdutoUseCase(repo, empresas).executar(produtoCommand());
         assertThat(result.nome()).isEqualTo("Produto"); verify(repo).salvar(argThat(p -> p.estoqueAtual().equals(Quantidade.zero()) && p.unidadeMedida().equals("UN")));
     }
 
     @Test void cadastrarProduto_rejeitaCodigoDuplicado() {
-        ProdutoRepository repo = mock(ProdutoRepository.class); when(repo.buscarPorCodigoBarras(any(), any())).thenReturn(Optional.of(produto()));
-        assertThatThrownBy(() -> new CadastrarProdutoUseCase(repo).executar(produtoCommand())).isInstanceOf(ConflitoDeDominioException.class);
+        ProdutoRepository repo = mock(ProdutoRepository.class); EmpresaRepository empresas = mock(EmpresaRepository.class); when(empresas.buscarPorId(any())).thenReturn(Optional.of(mock(Empresa.class))); when(repo.buscarPorCodigoBarras(any(), any())).thenReturn(Optional.of(produto()));
+        assertThatThrownBy(() -> new CadastrarProdutoUseCase(repo, empresas).executar(produtoCommand())).isInstanceOf(ConflitoDeDominioException.class);
         verify(repo, never()).salvar(any());
+    }
+
+    @Test void cadastrarProduto_rejeitaEmpresaInexistenteAntesDeSalvar() {
+        ProdutoRepository produtos = mock(ProdutoRepository.class); EmpresaRepository empresas = mock(EmpresaRepository.class);
+        when(empresas.buscarPorId(any())).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> new CadastrarProdutoUseCase(produtos, empresas).executar(produtoCommand()))
+                .isInstanceOf(EntidadeNaoEncontradaException.class)
+                .hasMessage("Empresa nao encontrada");
+        verify(produtos, never()).salvar(any());
     }
 
     @Test void buscarProduto_devolveDtoOuNaoEncontrado() {
