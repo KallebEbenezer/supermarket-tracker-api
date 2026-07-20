@@ -19,4 +19,7 @@ public class ClienteRepositoryJpaAdapter implements ClienteRepository {
 
     public Cliente salvar(Cliente cliente) { return mapper.toDomain(jpa.save(mapper.toEntity(cliente))); }
     public Optional<Cliente> buscarPorId(Identificador id) { return jpa.findById(id.valor()).map(mapper::toDomain); }
+    public List<Cliente> listarPorEmpresa(Identificador empresaId) {
+        return jpa.findByEmpresaIdOrderByNomeAsc(empresaId.valor()).stream().map(mapper::toDomain).toList();
+    }
 }
