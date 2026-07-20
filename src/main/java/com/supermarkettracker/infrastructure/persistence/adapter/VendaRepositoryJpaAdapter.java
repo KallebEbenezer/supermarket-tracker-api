@@ -31,4 +31,11 @@ public class VendaRepositoryJpaAdapter implements VendaRepository {
     public List<ItemVenda> listarItens(Identificador vendaId) {
         return itens.findByVendaIdOrderByNumeroAsc(vendaId.valor()).stream().map(mapper::toDomain).toList();
     }
+
+    public List<Venda> listarPorEmpresa(Identificador empresaId, Identificador lojaId, int limite) {
+        List<VendaEntity> entidades = lojaId == null
+                ? vendas.findByEmpresaIdOrderByCriadoEmDesc(empresaId.valor())
+                : vendas.findByEmpresaIdAndLojaIdOrderByCriadoEmDesc(empresaId.valor(), lojaId.valor());
+        return entidades.stream().limit(limite).map(mapper::toDomain).toList();
+    }
 }
