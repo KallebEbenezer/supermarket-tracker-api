@@ -1,3 +1,3 @@
 package com.supermarkettracker.infrastructure.persistence.repository;
 import com.supermarkettracker.infrastructure.persistence.entity.MovimentacaoEstoqueEntity; import org.springframework.data.jpa.repository.JpaRepository; import java.util.*;
-public interface MovimentacaoEstoqueJpaRepository extends JpaRepository<MovimentacaoEstoqueEntity, UUID> { List<MovimentacaoEstoqueEntity> findByProdutoIdOrderByCriadoEmDesc(UUID produtoId); }
+public interface MovimentacaoEstoqueJpaRepository extends JpaRepository<MovimentacaoEstoqueEntity, UUID> { List<MovimentacaoEstoqueEntity> findByProdutoIdOrderByCriadoEmDesc(UUID produtoId); List<MovimentacaoEstoqueEntity> findByEmpresaIdOrderByCriadoEmDesc(UUID empresaId); List<MovimentacaoEstoqueEntity> findByEmpresaIdAndLojaIdOrderByCriadoEmDesc(UUID empresaId, UUID lojaId); }
