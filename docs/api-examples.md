@@ -1,6 +1,6 @@
 # Exemplos de API
 
-Os exemplos usam `http://localhost:8080` e UUIDs ilustrativos. Caso a segurança padrão esteja ativa, informe `-u user:<senha-exibida-no-log>` ao `curl`.
+Os exemplos usam `http://localhost:8080` e UUIDs ilustrativos. As rotas de negócio usam Basic Auth; informe `-u user:<senha-exibida-no-log>` ao `curl`. No Swagger, clique em **Authorize**, selecione `basicAuth` e informe as mesmas credenciais.
 
 ```bash
 export API_URL=http://localhost:8080

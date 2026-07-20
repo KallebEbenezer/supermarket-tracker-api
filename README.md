@@ -68,4 +68,4 @@ O relatório JaCoCo é criado em `target/site/jacoco/index.html`. Os testes de i
 
 ## Segurança atual
 
-Enquanto não há uma configuração de segurança específica no projeto, a presença do Spring Security ativa a configuração padrão do Spring Boot. Em desenvolvimento, use Basic Auth com usuário `user` e a senha temporária exibida no log de inicialização. Essa configuração é apenas transitória e deve ser substituída por autenticação explícita antes de produção.
+As rotas de negócio usam Basic Auth. Em desenvolvimento, use o usuário `user` e a senha temporária exibida no log de inicialização. Swagger e o health check são públicos; no Swagger, clique em **Authorize** e informe as credenciais antes de executar uma rota de negócio. Essa configuração é apenas transitória e deve ser substituída por autenticação explícita antes de produção.

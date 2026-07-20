@@ -1,7 +1,10 @@
 package com.supermarkettracker.infrastructure.config;
 
 import io.swagger.v3.oas.models.OpenAPI;
+import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.info.Info;
+import io.swagger.v3.oas.models.security.SecurityRequirement;
+import io.swagger.v3.oas.models.security.SecurityScheme;
 import io.swagger.v3.oas.models.tags.Tag;
 import java.util.List;
 import org.springframework.context.annotation.Bean;
@@ -13,6 +16,9 @@ public class OpenApiConfiguration {
     OpenAPI supermarketTrackerOpenApi() {
         return new OpenAPI().info(new Info().title("Supermarket Tracker API")
                 .version("v1").description("API REST para cadastro comercial, caixa, estoque, vendas e dashboard."))
+                .components(new Components().addSecuritySchemes("basicAuth", new SecurityScheme()
+                        .type(SecurityScheme.Type.HTTP).scheme("basic")))
+                .addSecurityItem(new SecurityRequirement().addList("basicAuth"))
                 .tags(List.of(
                         new Tag().name("Empresas").description("Cadastro de empresas."),
                         new Tag().name("Lojas").description("Cadastro e consulta de lojas."),
