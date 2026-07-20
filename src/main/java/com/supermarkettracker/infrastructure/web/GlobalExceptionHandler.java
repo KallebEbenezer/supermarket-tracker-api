@@ -1,8 +1,11 @@
 package com.supermarkettracker.infrastructure.web;
 
+import com.supermarkettracker.application.service.TokenInvalidoException;
 import com.supermarkettracker.domain.exception.ConflitoDeDominioException;
+import com.supermarkettracker.domain.exception.CredenciaisInvalidasException;
 import com.supermarkettracker.domain.exception.EntidadeNaoEncontradaException;
 import com.supermarkettracker.domain.exception.RegraDeDominioException;
+import com.supermarkettracker.domain.exception.TokenRedefinicaoInvalidoException;
 import com.supermarkettracker.infrastructure.web.dto.ErrorResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
@@ -35,6 +38,21 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(ConflitoDeDominioException.class)
     ResponseEntity<ErrorResponse> handleConflict(ConflitoDeDominioException exception, HttpServletRequest request) {
         return error(HttpStatus.CONFLICT, "DOMAIN_CONFLICT", exception.getMessage(), Map.of(), request);
+    }
+
+    @ExceptionHandler(CredenciaisInvalidasException.class)
+    ResponseEntity<ErrorResponse> handleCredenciaisInvalidas(CredenciaisInvalidasException exception, HttpServletRequest request) {
+        return error(HttpStatus.UNAUTHORIZED, "INVALID_CREDENTIALS", exception.getMessage(), Map.of(), request);
+    }
+
+    @ExceptionHandler(TokenInvalidoException.class)
+    ResponseEntity<ErrorResponse> handleTokenInvalido(TokenInvalidoException exception, HttpServletRequest request) {
+        return error(HttpStatus.UNAUTHORIZED, "INVALID_TOKEN", exception.getMessage(), Map.of(), request);
+    }
+
+    @ExceptionHandler(TokenRedefinicaoInvalidoException.class)
+    ResponseEntity<ErrorResponse> handleTokenRedefinicao(TokenRedefinicaoInvalidoException exception, HttpServletRequest request) {
+        return error(HttpStatus.BAD_REQUEST, "INVALID_RESET_TOKEN", exception.getMessage(), Map.of(), request);
     }
 
     @ExceptionHandler(RegraDeDominioException.class)

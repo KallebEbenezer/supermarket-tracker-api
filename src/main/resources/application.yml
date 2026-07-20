@@ -20,6 +20,12 @@ server:
   port: ${SERVER_PORT:8080}
   shutdown: graceful
 
+app:
+  jwt:
+    secret: ${APP_JWT_SECRET:supermarket-tracker-dev-secret-change-me-32}
+    access-ttl-minutes: 15
+    refresh-ttl-days: 7
+
 management:
   endpoints:
     web:
