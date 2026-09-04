@@ -29,6 +29,19 @@ services:
       DB_NAME: ${POSTGRES_DB:-supermarket_tracker}
       DB_USERNAME: ${POSTGRES_USER:-supermarket}
       DB_PASSWORD: ${POSTGRES_PASSWORD:-supermarket}
+      # JWT - secret para autenticação
+      APP_JWT_SECRET: ${APP_JWT_SECRET}
+      # Mercado Pago - access token para PIX e Cartão
+      MERCADOPAGO_ACCESS_TOKEN: ${MERCADOPAGO_ACCESS_TOKEN}
+      PIX_MERCADOPAGO_ACCESS_TOKEN: ${PIX_MERCADOPAGO_ACCESS_TOKEN}
+      CARTAO_PROVIDER: ${CARTAO_PROVIDER}
+      # E-mail SMTP
+      EMAIL_PROVIDER: ${EMAIL_PROVIDER}
+      EMAIL_FROM: ${EMAIL_FROM}
+      MAIL_HOST: ${MAIL_HOST}
+      MAIL_PORT: ${MAIL_PORT}
+      MAIL_USERNAME: ${MAIL_USERNAME}
+      MAIL_PASSWORD: ${MAIL_PASSWORD}
     ports:
       - "${APP_PORT:-8080}:8080"
     depends_on:

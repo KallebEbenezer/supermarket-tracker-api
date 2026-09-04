@@ -66,6 +66,13 @@ mvn test
 
 O relatório JaCoCo é criado em `target/site/jacoco/index.html`. Os testes de integração usam PostgreSQL com Testcontainers e executam automaticamente quando Docker estiver disponível.
 
+## Limitações conhecidas (pré-produção)
+
+- **PCI-DSS — tokenização de cartão**: o endpoint de cartão (`POST /api/v1/pagamentos/cartao` e `/finalizar` com `tokenCartao`) aceita um token enviado pelo app. **Em produção, este token deve vir exclusivamente do SDK do Mercado Pago executado no device** (`MercadoPagoCheckout.init()` ou similar); nunca trafegar PAN, CVV ou data de expiração pelo app/backend. O adapter atual valida apenas o formato do token (32–64 chars) como salvaguarda. Antes de processar cartões reais, integrar SDK oficial MP no app Flutter.
+- **Reset de senha**: envia token por e-mail via `EmailGateway` (`app.email.provider`). Em dev usa `mock` (apenas log). Configure SMTP em prod (`smtp`).
+- **Webhook PIX**: validado por HMAC-SHA256 (`MERCADOPAGO_WEBHOOK_SECRET`). O secret deve ser configurado em prod ou todos os webhooks serão rejeitados.
+- **Rate limiting**: não implementado. Adicionar antes de expor publicamente.
+
 ## Segurança atual
 
 As rotas de negócio usam Basic Auth. Em desenvolvimento, use o usuário `user` e a senha temporária exibida no log de inicialização. Swagger e o health check são públicos; no Swagger, clique em **Authorize** e informe as credenciais antes de executar uma rota de negócio. Essa configuração é apenas transitória e deve ser substituída por autenticação explícita antes de produção.
