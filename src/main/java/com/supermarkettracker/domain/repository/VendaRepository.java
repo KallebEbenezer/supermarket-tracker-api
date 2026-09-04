@@ -12,4 +12,5 @@ public interface VendaRepository {
     ItemVenda salvarItem(ItemVenda item);
     List<ItemVenda> listarItens(Identificador vendaId);
     List<Venda> listarPorEmpresa(Identificador empresaId, Identificador lojaId, int limite);
+    Optional<Long> findMaxNumeroByEmpresaId(Identificador empresaId);
 }
