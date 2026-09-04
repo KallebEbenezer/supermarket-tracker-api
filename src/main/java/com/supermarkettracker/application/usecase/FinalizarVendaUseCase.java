@@ -10,13 +10,16 @@ import com.supermarkettracker.domain.exception.EntidadeNaoEncontradaException;
 import com.supermarkettracker.domain.exception.RegraDeDominioException;
 import com.supermarkettracker.domain.model.ItemVenda;
 import com.supermarkettracker.domain.model.MovimentacaoEstoque;
+import com.supermarkettracker.domain.model.Pagamento;
 import com.supermarkettracker.domain.model.Produto;
 import com.supermarkettracker.domain.model.Venda;
+import com.supermarkettracker.domain.model.enums.StatusPagamento;
 import com.supermarkettracker.domain.model.enums.StatusVenda;
 import com.supermarkettracker.domain.model.enums.TipoMovimentacaoEstoque;
 import com.supermarkettracker.domain.model.valueobject.Dinheiro;
 import com.supermarkettracker.domain.model.valueobject.Identificador;
 import com.supermarkettracker.domain.model.valueobject.Quantidade;
+import com.supermarkettracker.domain.repository.ContaBancariaRepository;
 import com.supermarkettracker.domain.repository.DashboardRepository;
 import com.supermarkettracker.domain.repository.MovimentacaoEstoqueRepository;
 import com.supermarkettracker.domain.repository.PagamentoRepository;
@@ -34,17 +37,20 @@ public class FinalizarVendaUseCase {
     private final ProdutoRepository produtos;
     private final MovimentacaoEstoqueRepository movimentacoes;
     private final DashboardRepository dashboard;
+    private final PagamentoRepository pagamentos;
     private final CheckoutPagamentoService checkoutPagamentos;
 
     public FinalizarVendaUseCase(VendaRepository vendas, ProdutoRepository produtos, PagamentoRepository pagamentos,
             MovimentacaoEstoqueRepository movimentacoes, DashboardRepository dashboard,
+            ContaBancariaRepository contasBancarias,
             com.supermarkettracker.domain.gateway.PixGateway pixGateway,
             com.supermarkettracker.domain.gateway.CartaoGateway cartaoGateway) {
         this.vendas = vendas;
         this.produtos = produtos;
+        this.pagamentos = pagamentos;
         this.movimentacoes = movimentacoes;
         this.dashboard = dashboard;
-        this.checkoutPagamentos = new CheckoutPagamentoService(pagamentos, pixGateway, cartaoGateway);
+        this.checkoutPagamentos = new CheckoutPagamentoService(pagamentos, contasBancarias, pixGateway, cartaoGateway);
     }
 
     @Transactional
@@ -66,10 +72,12 @@ public class FinalizarVendaUseCase {
         validarTotalPagamentos(command.pagamentos(), total);
 
         Instant agora = Instant.now();
+        long numeroFinal = command.numero() != null ? command.numero()
+                : vendas.findMaxNumeroByEmpresaId(new Identificador(command.empresaId())).orElse(0L) + 1;
         BigDecimal resultado = total.subtract(custoTotal);
         Venda venda = new Venda(Identificador.novo(), new Identificador(command.empresaId()),
                 new Identificador(command.lojaId()), identificador(command.sessaoCaixaId()),
-                new Identificador(command.usuarioId()), identificador(command.clienteId()), command.numero(),
+                new Identificador(command.usuarioId()), identificador(command.clienteId()), numeroFinal,
                 new Dinheiro(subtotal), new Dinheiro(command.desconto()), new Dinheiro(command.acrescimo()),
                 new Dinheiro(total), new Dinheiro(custoTotal), new Dinheiro(resultado.max(BigDecimal.ZERO)),
                 new Dinheiro(resultado.min(BigDecimal.ZERO).abs()), new Quantidade(quantidadeItens),
@@ -79,17 +87,33 @@ public class FinalizarVendaUseCase {
         List<ItemVenda> itensSalvos = itens.stream().map(item -> vincularAVenda(item, vendaCriada.id()))
                 .map(vendas::salvarItem).toList();
         checkoutPagamentos.processar(vendaCriada, command.pagamentos());
-        venda = vendas.salvar(finalizar(vendaCriada));
-        movimentarEstoque(venda, itensSalvos);
-        dashboard.registrarVendaPaga(venda, itensSalvos);
+
+        boolean todosAprovados = todosPagamentosAprovados(vendaCriada.id());
+        if (todosAprovados) {
+            venda = vendas.salvar(finalizar(vendaCriada));
+            movimentarEstoque(venda, itensSalvos);
+            dashboard.registrarVendaPaga(venda, itensSalvos);
+        } else {
+            venda = vendaCriada;
+        }
         return VendaMapper.paraDto(venda);
+    }
+
+    private boolean todosPagamentosAprovados(Identificador vendaId) {
+        List<Pagamento> pagamentosVenda = pagamentos.listarPorVenda(vendaId);
+        if (pagamentosVenda.isEmpty()) {
+            return false;
+        }
+        return pagamentosVenda.stream()
+                .allMatch(p -> p.status() == StatusPagamento.APROVADO);
     }
 
     private void validar(FinalizarVendaCommand command) {
         ValidacaoCommand.obrigatorio(command.empresaId(), "Empresa");
         ValidacaoCommand.obrigatorio(command.lojaId(), "Loja");
         ValidacaoCommand.obrigatorio(command.usuarioId(), "Usuario");
-        if (command.numero() <= 0) throw new IllegalArgumentException("Numero da venda deve ser positivo");
+        if (command.numero() != null && command.numero() <= 0)
+            throw new IllegalArgumentException("Numero da venda deve ser positivo");
         ValidacaoCommand.naoNegativo(command.desconto(), "Desconto");
         ValidacaoCommand.naoNegativo(command.acrescimo(), "Acrescimo");
         if (command.itens() == null || command.itens().isEmpty()) {
@@ -130,6 +154,10 @@ public class FinalizarVendaUseCase {
     }
 
     private void movimentarEstoque(Venda venda, List<ItemVenda> itens) {
+        if (movimentacoes.existeMovimentacaoVenda(venda.id())) {
+            // Idempotência: webhook PIX pode chamar este caminho mais de uma vez.
+            return;
+        }
         Map<Identificador, Produto> produtosPorId = new HashMap<>();
         for (ItemVenda item : itens) {
             if (item.produtoId() == null) continue;
@@ -144,6 +172,11 @@ public class FinalizarVendaUseCase {
                     item.precoCompraUnitario(), "Baixa automatica da venda " + venda.numero(),
                     "VENDA-" + venda.numero() + "-ITEM-" + item.numero(), Instant.now()));
         }
+    }
+
+    /** Visível para {@link PixNotificationService} — dispara baixa de estoque quando o último pagamento (PIX) é confirmado. */
+    public void movimentarEstoqueSeNecessario(Venda venda, List<ItemVenda> itens) {
+        movimentarEstoque(venda, itens);
     }
 
     private Produto buscarProduto(Identificador produtoId) {

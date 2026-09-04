@@ -6,4 +6,5 @@ import java.math.BigDecimal;
 import java.util.UUID;
 
 public record PagamentoCheckoutCommand(UUID contaBancariaId, TipoPagamento tipo, BigDecimal valor,
-                                       ModalidadeCartao modalidadeCartao, short parcelas, String referencia) { }
+                                       ModalidadeCartao modalidadeCartao, short parcelas, String referencia,
+                                       String tokenCartao) { }

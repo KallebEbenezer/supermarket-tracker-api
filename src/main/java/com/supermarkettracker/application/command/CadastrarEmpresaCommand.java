@@ -1,2 +1,3 @@
 package com.supermarkettracker.application.command;
-public record CadastrarEmpresaCommand(String razaoSocial, String nomeFantasia, String cnpj) { }
+import java.util.UUID;
+public record CadastrarEmpresaCommand(String razaoSocial, String nomeFantasia, String cnpj, UUID usuarioId) { }
