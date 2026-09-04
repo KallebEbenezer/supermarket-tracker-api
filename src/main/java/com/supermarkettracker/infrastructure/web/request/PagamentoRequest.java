@@ -10,6 +10,7 @@ import java.util.UUID;
 
 public record PagamentoRequest(UUID contaBancariaId, @NotNull TipoPagamento tipo,
                                @NotNull @DecimalMin(value = "0.01") BigDecimal valor,
-                               ModalidadeCartao modalidadeCartao, Short parcelas, String referencia) {
+                               ModalidadeCartao modalidadeCartao, Short parcelas, String referencia,
+                               String tokenCartao) {
     public RegistrarPagamentoCommand toCommand(UUID vendaId) { return new RegistrarPagamentoCommand(vendaId, contaBancariaId, tipo, valor, modalidadeCartao, parcelas == null ? 0 : parcelas, referencia); }
 }

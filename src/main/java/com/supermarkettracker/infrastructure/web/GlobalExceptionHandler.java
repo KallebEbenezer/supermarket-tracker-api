@@ -4,6 +4,8 @@ import com.supermarkettracker.application.service.TokenInvalidoException;
 import com.supermarkettracker.domain.exception.ConflitoDeDominioException;
 import com.supermarkettracker.domain.exception.CredenciaisInvalidasException;
 import com.supermarkettracker.domain.exception.EntidadeNaoEncontradaException;
+import com.supermarkettracker.domain.exception.GatewayConfiguracaoException;
+import com.supermarkettracker.domain.exception.GatewayIndisponivelException;
 import com.supermarkettracker.domain.exception.RegraDeDominioException;
 import com.supermarkettracker.domain.exception.TokenRedefinicaoInvalidoException;
 import com.supermarkettracker.infrastructure.web.dto.ErrorResponse;
@@ -58,6 +60,18 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(RegraDeDominioException.class)
     ResponseEntity<ErrorResponse> handleBusinessRule(RegraDeDominioException exception, HttpServletRequest request) {
         return error(HttpStatus.UNPROCESSABLE_ENTITY, "BUSINESS_RULE_VIOLATION", exception.getMessage(), Map.of(), request);
+    }
+
+    @ExceptionHandler(GatewayIndisponivelException.class)
+    ResponseEntity<ErrorResponse> handleGatewayUnavailable(GatewayIndisponivelException exception, HttpServletRequest request) {
+        LOGGER.error("Gateway indisponível: {}", exception.getMessage());
+        return error(HttpStatus.BAD_GATEWAY, "GATEWAY_UNAVAILABLE", exception.getMessage(), Map.of(), request);
+    }
+
+    @ExceptionHandler(GatewayConfiguracaoException.class)
+    ResponseEntity<ErrorResponse> handleGatewayMisconfigured(GatewayConfiguracaoException exception, HttpServletRequest request) {
+        LOGGER.error("Gateway mal configurado: {}", exception.getMessage());
+        return error(HttpStatus.SERVICE_UNAVAILABLE, "GATEWAY_MISCONFIGURED", exception.getMessage(), Map.of(), request);
     }
 
     @ExceptionHandler({MethodArgumentNotValidException.class, ConstraintViolationException.class,

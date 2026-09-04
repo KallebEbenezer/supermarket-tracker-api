@@ -11,7 +11,6 @@ import com.supermarkettracker.application.usecase.SolicitarResetSenhaUseCase;
 import com.supermarkettracker.application.usecase.UsuarioAtual;
 import com.supermarkettracker.infrastructure.web.dto.ApiResponse;
 import com.supermarkettracker.infrastructure.web.dto.AuthResponse;
-import com.supermarkettracker.infrastructure.web.dto.RecuperarSenhaResponse;
 import com.supermarkettracker.infrastructure.web.dto.RefreshResponse;
 import com.supermarkettracker.infrastructure.web.dto.UsuarioAuthResponse;
 import com.supermarkettracker.infrastructure.web.request.LoginRequest;
@@ -82,9 +81,9 @@ public class AutenticacaoController {
     }
 
     @PostMapping("/recuperar-senha")
-    public ApiResponse<RecuperarSenhaResponse> recuperarSenha(@Valid @RequestBody RecuperarSenhaRequest request) {
-        String token = solicitarReset.executar(request.toCommand());
-        return ApiResponse.of(new RecuperarSenhaResponse(token));
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void recuperarSenha(@Valid @RequestBody RecuperarSenhaRequest request) {
+        solicitarReset.executar(request.toCommand());
     }
 
     @PostMapping("/redefinir-senha")

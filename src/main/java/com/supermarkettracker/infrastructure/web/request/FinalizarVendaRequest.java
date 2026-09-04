@@ -7,13 +7,12 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Positive;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
-public record FinalizarVendaRequest(@NotNull UUID empresaId, @NotNull UUID lojaId, UUID sessaoCaixaId,
-                                    @NotNull UUID usuarioId, UUID clienteId, @Positive long numero,
+public record FinalizarVendaRequest(@NotNull UUID empresaId, UUID lojaId, UUID sessaoCaixaId,
+                                    @NotNull UUID usuarioId, UUID clienteId, Long numero,
                                     @NotNull @DecimalMin("0.00") BigDecimal desconto,
                                     @NotNull @DecimalMin("0.00") BigDecimal acrescimo, String observacao,
                                     @NotEmpty List<@Valid ItemVendaRequest> itens,
@@ -33,6 +32,6 @@ public record FinalizarVendaRequest(@NotNull UUID empresaId, @NotNull UUID lojaI
     private PagamentoCheckoutCommand pagamentoCommand(PagamentoRequest pagamento) {
         return new PagamentoCheckoutCommand(pagamento.contaBancariaId(), pagamento.tipo(), pagamento.valor(),
                 pagamento.modalidadeCartao(), pagamento.parcelas() == null ? 0 : pagamento.parcelas(),
-                pagamento.referencia());
+                pagamento.referencia(), pagamento.tokenCartao());
     }
 }
