@@ -15,6 +15,17 @@ spring:
     enabled: true
     locations: classpath:db/migration
     baseline-on-migrate: true
+  mail:
+    host: ${MAIL_HOST:smtp.gmail.com}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
 
 server:
   port: ${SERVER_PORT:8080}
@@ -22,9 +33,23 @@ server:
 
 app:
   jwt:
-    secret: ${APP_JWT_SECRET:supermarket-tracker-dev-secret-change-me-32}
+    secret: ${APP_JWT_SECRET}
     access-ttl-minutes: 15
     refresh-ttl-days: 7
+  pix:
+    mock-enabled: ${PIX_MOCK_ENABLED:true}
+    mercadopago:
+      access-token: ${PIX_MERCADOPAGO_ACCESS_TOKEN:}
+      base-url: https://api.mercadopago.com
+  cartao:
+    provider: ${CARTAO_PROVIDER:mercadopago}
+  mercadopago:
+    access-token: ${MERCADOPAGO_ACCESS_TOKEN:}
+    base-url: https://api.mercadopago.com
+    webhook-secret: ${MERCADOPAGO_WEBHOOK_SECRET:}
+  email:
+    provider: ${EMAIL_PROVIDER:smtp}
+    from: ${EMAIL_FROM:noreply@supermarkettracker.com.br}
 
 management:
   endpoints:

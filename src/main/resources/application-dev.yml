@@ -6,6 +6,13 @@ spring:
   jpa:
     show-sql: true
 
+# ⚠️ Secret fixo APENAS para desenvolvimento local.
+app:
+  jwt:
+    secret: ${APP_JWT_SECRET:supermarket-tracker-dev-secret-change-me-32}
+  pix:
+    mock-enabled: true
+
 logging:
   level:
     org.hibernate.SQL: debug

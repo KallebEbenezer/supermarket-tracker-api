@@ -6,6 +6,12 @@ spring:
   jpa:
     show-sql: false
 
+app:
+  pix:
+    mock-enabled: false
+  mercadopago:
+    webhook-secret: ${MERCADOPAGO_WEBHOOK_SECRET}
+
 logging:
   level:
     root: info
