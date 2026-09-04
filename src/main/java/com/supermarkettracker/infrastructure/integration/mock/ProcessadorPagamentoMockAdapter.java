@@ -6,10 +6,12 @@ import com.supermarkettracker.domain.gateway.ProcessadorPagamentoGateway;
 import com.supermarkettracker.domain.model.enums.ModalidadeCartao;
 import com.supermarkettracker.domain.model.valueobject.Dinheiro;
 import com.supermarkettracker.domain.model.valueobject.Identificador;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 /** Compatibiliza o contrato de pagamentos já usado pela aplicação com as portas específicas. */
 @Component
+@ConditionalOnProperty(name = "app.cartao.provider", havingValue = "mock")
 public class ProcessadorPagamentoMockAdapter implements ProcessadorPagamentoGateway {
     private final PixGateway pixGateway;
     private final CartaoGateway cartaoGateway;
@@ -21,14 +23,14 @@ public class ProcessadorPagamentoMockAdapter implements ProcessadorPagamentoGate
 
     @Override
     public ResultadoPagamento processarPix(Identificador pagamentoId, Dinheiro valor) {
-        PixGateway.CobrancaPix cobranca = pixGateway.criarCobranca(pagamentoId, valor);
+        PixGateway.CobrancaPix cobranca = pixGateway.criarCobranca(pagamentoId, valor, "mock-chave-pix");
         return new ResultadoPagamento(cobranca.transacaoId(), cobranca.status(), null);
     }
 
     @Override
     public ResultadoPagamento processarCartao(Identificador pagamentoId, Dinheiro valor,
                                               ModalidadeCartao modalidade, short parcelas) {
-        CartaoGateway.TransacaoCartao transacao = cartaoGateway.processar(pagamentoId, valor, modalidade, parcelas);
+        CartaoGateway.TransacaoCartao transacao = cartaoGateway.processar(pagamentoId, valor, modalidade, parcelas, null);
         return new ResultadoPagamento(transacao.transacaoId(), transacao.status(), transacao.codigoAutorizacao());
     }
 }
