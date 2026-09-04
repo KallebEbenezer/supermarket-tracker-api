@@ -13,11 +13,10 @@ import com.supermarkettracker.domain.repository.EmpresaRepository;
 import com.supermarkettracker.domain.repository.ProdutoRepository;
 import java.time.Instant;
 public final class CadastrarProdutoUseCase { private final ProdutoRepository produtos; private final EmpresaRepository empresas; public CadastrarProdutoUseCase(ProdutoRepository produtos, EmpresaRepository empresas) { this.produtos = produtos; this.empresas = empresas; }
-    public ProdutoDto executar(CadastrarProdutoCommand c) { ValidacaoCommand.obrigatorio(c.empresaId(), "Empresa"); ValidacaoCommand.obrigatorio(c.codigoBarras(), "Codigo de barras"); ValidacaoCommand.obrigatorio(c.nome(), "Nome"); ValidacaoCommand.naoNegativo(c.precoCompra(), "Preco de compra"); ValidacaoCommand.naoNegativo(c.precoVenda(), "Preco de venda"); ValidacaoCommand.naoNegativo(c.estoqueMinimo(), "Estoque minimo"); Identificador empresaId = new Identificador(c.empresaId()); if (empresas.buscarPorId(empresaId).isEmpty()) throw new EntidadeNaoEncontradaException("Empresa nao encontrada"); if (produtos.buscarPorCodigoBarras(empresaId, c.codigoBarras()).isPresent()) throw new ConflitoDeDominioException("Codigo de barras ja cadastrado"); Instant agora = Instant.now(); Produto p = new Produto(Identificador.novo(), empresaId, c.categoriaId() == null ? null : new Identificador(c.categoriaId()), c.codigoBarras(), c.sku(), c.nome(), c.descricao(), null, c.unidadeMedida() == null ? "UN" : c.unidadeMedida(), new Dinheiro(c.precoCompra()), new Dinheiro(c.precoVenda()), Quantidade.zero(), new Quantidade(c.estoqueMinimo()), c.permiteEstoqueNegativo(), Produto.StatusProduto.ATIVO, agora, agora); return ProdutoMapper.paraDto(produtos.salvar(p)); }
+    public ProdutoDto executar(CadastrarProdutoCommand c) { ValidacaoCommand.obrigatorio(c.empresaId(), "Empresa"); ValidacaoCommand.obrigatorio(c.nome(), "Nome"); ValidacaoCommand.naoNegativo(c.precoCompra(), "Preco de compra"); ValidacaoCommand.naoNegativo(c.precoVenda(), "Preco de venda"); ValidacaoCommand.naoNegativo(c.estoqueMinimo(), "Estoque minimo"); Identificador empresaId = new Identificador(c.empresaId()); if (empresas.buscarPorId(empresaId).isEmpty()) throw new EntidadeNaoEncontradaException("Empresa nao encontrada"); String codigoBarras = (c.codigoBarras() == null || c.codigoBarras().isBlank()) ? gerarCodigoBarras() : c.codigoBarras(); if (produtos.buscarPorCodigoBarras(empresaId, codigoBarras).isPresent()) throw new ConflitoDeDominioException("Codigo de barras ja cadastrado"); Instant agora = Instant.now(); Produto p = new Produto(Identificador.novo(), empresaId, c.categoriaId() == null ? null : new Identificador(c.categoriaId()), codigoBarras, c.sku(), c.nome(), c.descricao(), null, c.unidadeMedida() == null ? "UN" : c.unidadeMedida(), new Dinheiro(c.precoCompra()), new Dinheiro(c.precoVenda()), Quantidade.zero(), new Quantidade(c.estoqueMinimo()), c.permiteEstoqueNegativo(), Produto.StatusProduto.ATIVO, agora, agora); return ProdutoMapper.paraDto(produtos.salvar(p)); }
 
     public ProdutoDto executarAtualizacao(Identificador id, CadastrarProdutoCommand c) {
         ValidacaoCommand.obrigatorio(c.empresaId(), "Empresa");
-        ValidacaoCommand.obrigatorio(c.codigoBarras(), "Codigo de barras");
         ValidacaoCommand.obrigatorio(c.nome(), "Nome");
         ValidacaoCommand.naoNegativo(c.precoCompra(), "Preco de compra");
         ValidacaoCommand.naoNegativo(c.precoVenda(), "Preco de venda");
@@ -26,12 +25,15 @@ public final class CadastrarProdutoUseCase { private final ProdutoRepository pro
         Produto existente = produtos.buscarPorId(id)
             .orElseThrow(() -> new EntidadeNaoEncontradaException("Produto nao encontrado"));
 
+        String codigoBarras = (c.codigoBarras() == null || c.codigoBarras().isBlank())
+            ? existente.codigoBarras() : c.codigoBarras();
+
         Instant agora = Instant.now();
         Produto atualizado = new Produto(
             existente.id(),
             existente.empresaId(),
             c.categoriaId() == null ? existente.categoriaId() : new Identificador(c.categoriaId()),
-            c.codigoBarras(),
+            codigoBarras,
             c.sku(),
             c.nome(),
             c.descricao(),
@@ -48,5 +50,9 @@ public final class CadastrarProdutoUseCase { private final ProdutoRepository pro
         );
 
         return ProdutoMapper.paraDto(produtos.salvar(atualizado));
+    }
+
+    private static String gerarCodigoBarras() {
+        return "9" + Identificador.novo().valor().toString().replace("-", "").substring(0, 12);
     }
 }

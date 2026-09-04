@@ -14,13 +14,17 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 @Configuration
 @EnableConfigurationProperties(JwtProperties.class)
 public class ApplicationUseCaseConfiguration {
+    @Bean ProvisaoPadraoService provisaoPadraoService(EmpresaRepository empresas, EmpresaUsuarioRepository empresaUsuarios,
+            LojaRepository lojas) {
+        return new ProvisaoPadraoService(empresas, empresaUsuarios, lojas);
+    }
     @Bean RegistrarUsuarioUseCase registrarUsuarioUseCase(UsuarioRepository usuarios, CredencialRepository credenciais,
-            PasswordEncoder passwordEncoder, TokenService tokenService) {
-        return new RegistrarUsuarioUseCase(usuarios, credenciais, passwordEncoder, tokenService);
+            PasswordEncoder passwordEncoder, TokenService tokenService, ProvisaoPadraoService provisaoPadrao) {
+        return new RegistrarUsuarioUseCase(usuarios, credenciais, passwordEncoder, tokenService, provisaoPadrao);
     }
     @Bean AutenticarUsuarioUseCase autenticarUsuarioUseCase(UsuarioRepository usuarios, CredencialRepository credenciais,
-            PasswordEncoder passwordEncoder, TokenService tokenService) {
-        return new AutenticarUsuarioUseCase(usuarios, credenciais, passwordEncoder, tokenService);
+            PasswordEncoder passwordEncoder, TokenService tokenService, ProvisaoPadraoService provisaoPadrao) {
+        return new AutenticarUsuarioUseCase(usuarios, credenciais, passwordEncoder, tokenService, provisaoPadrao);
     }
     @Bean RenovarTokenUseCase renovarTokenUseCase(CredencialRepository credenciais, TokenService tokenService) {
         return new RenovarTokenUseCase(credenciais, tokenService);

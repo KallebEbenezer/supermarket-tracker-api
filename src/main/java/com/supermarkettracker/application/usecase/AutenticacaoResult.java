@@ -2,8 +2,9 @@ package com.supermarkettracker.application.usecase;
 
 import com.supermarkettracker.domain.model.Usuario;
 import com.supermarkettracker.domain.model.enums.PapelUsuario;
+import com.supermarkettracker.domain.model.valueobject.Identificador;
 
 /** Resultado de um login/registro bem-sucedido: usuário + tokens de acesso. */
 public record AutenticacaoResult(Usuario usuario, PapelUsuario papel, String accessToken, String refreshToken,
-                                 long expiresInSegundos) {
+                                 long expiresInSegundos, Identificador empresaId, Identificador lojaId) {
 }

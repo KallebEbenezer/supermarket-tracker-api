@@ -18,13 +18,15 @@ public final class AutenticarUsuarioUseCase {
     private final CredencialRepository credenciais;
     private final PasswordEncoder passwordEncoder;
     private final TokenService tokenService;
+    private final ProvisaoPadraoService provisaoPadrao;
 
     public AutenticarUsuarioUseCase(UsuarioRepository usuarios, CredencialRepository credenciais,
-            PasswordEncoder passwordEncoder, TokenService tokenService) {
+            PasswordEncoder passwordEncoder, TokenService tokenService, ProvisaoPadraoService provisaoPadrao) {
         this.usuarios = usuarios;
         this.credenciais = credenciais;
         this.passwordEncoder = passwordEncoder;
         this.tokenService = tokenService;
+        this.provisaoPadrao = provisaoPadrao;
     }
 
     public AutenticacaoResult executar(AutenticarUsuarioCommand c) {
@@ -39,7 +41,8 @@ public final class AutenticarUsuarioUseCase {
         UUID usuarioId = credencial.usuarioId().valor();
         String accessToken = tokenService.gerarAccessToken(usuarioId, credencial.email().valor(), credencial.papel().name());
         String refreshToken = tokenService.gerarRefreshToken(usuarioId, credencial.email().valor(), credencial.papel().name());
+        ProvisaoPadraoService.Provisionamento prov = provisaoPadrao.provisionar(usuario);
         return new AutenticacaoResult(usuario, credencial.papel(), accessToken, refreshToken,
-                tokenService.accessTtlSegundos());
+                tokenService.accessTtlSegundos(), prov.empresaId(), prov.lojaId());
     }
 }

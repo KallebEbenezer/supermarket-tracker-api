@@ -21,13 +21,16 @@ public final class RegistrarUsuarioUseCase {
     private final CredencialRepository credenciais;
     private final PasswordEncoder passwordEncoder;
     private final com.supermarkettracker.application.service.TokenService tokenService;
+    private final ProvisaoPadraoService provisaoPadrao;
 
     public RegistrarUsuarioUseCase(UsuarioRepository usuarios, CredencialRepository credenciais,
-            PasswordEncoder passwordEncoder, com.supermarkettracker.application.service.TokenService tokenService) {
+            PasswordEncoder passwordEncoder, com.supermarkettracker.application.service.TokenService tokenService,
+            ProvisaoPadraoService provisaoPadrao) {
         this.usuarios = usuarios;
         this.credenciais = credenciais;
         this.passwordEncoder = passwordEncoder;
         this.tokenService = tokenService;
+        this.provisaoPadrao = provisaoPadrao;
     }
 
     public AutenticacaoResult executar(RegistrarUsuarioCommand c) {
@@ -53,6 +56,8 @@ public final class RegistrarUsuarioUseCase {
 
         String accessToken = tokenService.gerarAccessToken(usuarioId.valor(), email.valor(), c.papel().name());
         String refreshToken = tokenService.gerarRefreshToken(usuarioId.valor(), email.valor(), c.papel().name());
-        return new AutenticacaoResult(usuario, c.papel(), accessToken, refreshToken, tokenService.accessTtlSegundos());
+        ProvisaoPadraoService.Provisionamento prov = provisaoPadrao.provisionar(usuario);
+        return new AutenticacaoResult(usuario, c.papel(), accessToken, refreshToken, tokenService.accessTtlSegundos(),
+                prov.empresaId(), prov.lojaId());
     }
 }

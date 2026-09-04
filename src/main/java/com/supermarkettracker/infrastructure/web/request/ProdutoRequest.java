@@ -5,7 +5,7 @@ import jakarta.validation.constraints.*;
 import java.math.BigDecimal;
 import java.util.UUID;
 
-public record ProdutoRequest(@NotNull UUID empresaId, UUID categoriaId, @NotBlank String codigoBarras, String sku,
+public record ProdutoRequest(@NotNull UUID empresaId, UUID categoriaId, String codigoBarras, String sku,
                              @NotBlank String nome, String descricao, @Size(max = 10) String unidadeMedida,
                              @NotNull @DecimalMin("0.00") BigDecimal precoCompra,
                              @NotNull @DecimalMin("0.00") BigDecimal precoVenda,

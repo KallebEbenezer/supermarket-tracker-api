@@ -94,6 +94,8 @@ public class AutenticacaoController {
 
     private AuthResponse toResponse(AutenticacaoResult result) {
         return new AuthResponse(result.accessToken(), result.refreshToken(), result.expiresInSegundos(),
-                UsuarioAuthResponse.from(result.usuario(), result.papel()));
+                UsuarioAuthResponse.from(result.usuario(), result.papel()),
+                result.empresaId() != null ? result.empresaId().valor().toString() : null,
+                result.lojaId() != null ? result.lojaId().valor().toString() : null);
     }
 }

@@ -10,4 +10,6 @@ import com.supermarkettracker.domain.model.valueobject.Identificador;
 import com.supermarkettracker.domain.repository.LojaRepository;
 import java.time.Instant;
 public final class CadastrarLojaUseCase { private final LojaRepository lojas; public CadastrarLojaUseCase(LojaRepository lojas) { this.lojas = lojas; }
-    public LojaDto executar(CadastrarLojaCommand c) { ValidacaoCommand.obrigatorio(c.empresaId(), "Empresa"); ValidacaoCommand.obrigatorio(c.codigo(), "Codigo"); ValidacaoCommand.obrigatorio(c.nome(), "Nome"); Instant agora = Instant.now(); Loja l = new Loja(Identificador.novo(), new Identificador(c.empresaId()), c.codigo(), c.nome(), c.cnpj() == null ? null : new Documento(c.cnpj()), null, c.telefone(), StatusAtivo.ATIVO, agora, agora); return LojaMapper.paraDto(lojas.salvar(l)); } }
+    public LojaDto executar(CadastrarLojaCommand c) { ValidacaoCommand.obrigatorio(c.empresaId(), "Empresa"); ValidacaoCommand.obrigatorio(c.nome(), "Nome"); Instant agora = Instant.now(); String codigo = (c.codigo() == null || c.codigo().isBlank()) ? gerarCodigo() : c.codigo(); Loja l = new Loja(Identificador.novo(), new Identificador(c.empresaId()), codigo, c.nome(), c.cnpj() == null ? null : new Documento(c.cnpj()), null, c.telefone(), StatusAtivo.ATIVO, agora, agora); return LojaMapper.paraDto(lojas.salvar(l)); }
+
+    private static String gerarCodigo() { return "LOJA-" + Identificador.novo().valor().toString().substring(0, 8).toUpperCase(); } }
