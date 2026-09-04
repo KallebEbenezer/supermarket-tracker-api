@@ -80,8 +80,9 @@ public class PixWebhookController {
             }
 
             String paymentId = data.get("id").toString();
+            String type = payload.get("type") instanceof String t ? t : null;
 
-            if (!webhookValidator.validateSignature(xSignature, xRequestId, paymentId)) {
+            if (!webhookValidator.validateSignature(xSignature, xRequestId, paymentId, type)) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
             }
 

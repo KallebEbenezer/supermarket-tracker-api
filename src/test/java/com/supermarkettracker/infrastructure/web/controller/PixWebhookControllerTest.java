@@ -36,7 +36,7 @@ class PixWebhookControllerTest {
 
     @Test
     void rejeitaQuandoAssinaturaInvalida() {
-        when(validator.validateSignature(any(), any(), any())).thenReturn(false);
+        when(validator.validateSignature(any(), any(), any(), any())).thenReturn(false);
 
         var payload = Map.of("action", "payment.updated",
                 "data", Map.of("id", "12345"));
@@ -49,7 +49,7 @@ class PixWebhookControllerTest {
     @Test
     @SuppressWarnings("unchecked")
     void webhookValidoChamaServiceComStatusAprovado() throws Exception {
-        when(validator.validateSignature(any(), any(), eq("12345"))).thenReturn(true);
+        when(validator.validateSignature(any(), any(), eq("12345"), any())).thenReturn(true);
 
         var httpResponse = mock(HttpResponse.class);
         when(httpResponse.statusCode()).thenReturn(200);
@@ -68,7 +68,7 @@ class PixWebhookControllerTest {
     @Test
     @SuppressWarnings("unchecked")
     void webhookComPagamentoRejeitadoMapeiaParaREJEITADO() throws Exception {
-        when(validator.validateSignature(any(), any(), any())).thenReturn(true);
+        when(validator.validateSignature(any(), any(), any(), any())).thenReturn(true);
 
         var httpResponse = mock(HttpResponse.class);
         when(httpResponse.statusCode()).thenReturn(200);
@@ -87,7 +87,7 @@ class PixWebhookControllerTest {
     @Test
     @SuppressWarnings("unchecked")
     void mercadopagoRetorna404_retorna502() throws Exception {
-        when(validator.validateSignature(any(), any(), any())).thenReturn(true);
+        when(validator.validateSignature(any(), any(), any(), any())).thenReturn(true);
 
         var httpResponse = mock(HttpResponse.class);
         when(httpResponse.statusCode()).thenReturn(404);
@@ -104,7 +104,7 @@ class PixWebhookControllerTest {
 
     @Test
     void acaoDiferenteDePaymentUpdatedIgnorada() {
-        when(validator.validateSignature(any(), any(), any())).thenReturn(true);
+        when(validator.validateSignature(any(), any(), any(), any())).thenReturn(true);
 
         var payload = Map.<String, Object>of("action", "payment.created");
         ResponseEntity<Void> response = controller.handlePixNotification("sig", "req-1", payload);
@@ -115,7 +115,7 @@ class PixWebhookControllerTest {
 
     @Test
     void payloadSemDataRetornaBadRequest() {
-        when(validator.validateSignature(any(), any(), any())).thenReturn(true);
+        when(validator.validateSignature(any(), any(), any(), any())).thenReturn(true);
 
         var payload = Map.<String, Object>of("action", "payment.updated");
         ResponseEntity<Void> response = controller.handlePixNotification("sig", "req-1", payload);
@@ -126,7 +126,7 @@ class PixWebhookControllerTest {
 
     @Test
     void tokenAusenteNoMpRetorna502EmVezDeApproved() throws Exception {
-        when(validator.validateSignature(any(), any(), any())).thenReturn(true);
+        when(validator.validateSignature(any(), any(), any(), any())).thenReturn(true);
         var controllerSemToken = new PixWebhookController(notificationService, validator, "",
                 "https://api.mercadopago.com", httpClient);
 
