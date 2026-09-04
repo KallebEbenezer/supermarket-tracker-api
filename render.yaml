@@ -1,0 +1,35 @@
+services:
+  - type: web
+    name: supermarket-tracker-api
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    region: oregon
+    plan: free
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod
+      - key: DB_HOST
+        sync: false
+      - key: DB_PORT
+        value: 5432
+      - key: DB_NAME
+        value: postgres
+      - key: DB_USERNAME
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+      - key: APP_JWT_SECRET
+        generateValue: true
+      - key: PIX_MOCK_ENABLED
+        value: false
+      - key: PIX_MERCADOPAGO_ACCESS_TOKEN
+        sync: false
+      - key: MERCADOPAGO_ACCESS_TOKEN
+        sync: false
+      - key: MERCADOPAGO_WEBHOOK_SECRET
+        generateValue: true
+      - key: EMAIL_PROVIDER
+        value: smtp
+      - key: EMAIL_FROM
+        value: noreply@supermarkettracker.com.br
+    healthCheckPath: /actuator/health
