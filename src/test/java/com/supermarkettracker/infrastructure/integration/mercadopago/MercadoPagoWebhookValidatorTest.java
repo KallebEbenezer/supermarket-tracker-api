@@ -82,9 +82,38 @@ class MercadoPagoWebhookValidatorTest {
         assertThat(validator.validateSignature("ts=" + ts + ",v1=" + v1, REQUEST_ID, "9999")).isFalse();
     }
 
+    /** Formato legado ('='): o que a validação antiga da casa calculava. */
     private static String computeV1(long ts) {
+        return hmacHex("id=" + DATA_ID + ";request-id=" + REQUEST_ID + ";ts=" + ts + ";");
+    }
+
+    /// See https://www.mercadopago.com.br/developers/... (check-signature): o manifieto
+    /// assinado pelo MP usa DOIS-PONTOS dentro dos campos, semicolon entre eles e o
+    /// request-id do header mais o data.id do body:
+    ///     id:<data.id>;request-id:<x-request-id>;ts:<ts>;
+    private static String computeV1FormatoMercadoPago(long ts) {
+        return hmacHex("id:" + DATA_ID + ";request-id:" + REQUEST_ID + ";ts:" + ts + ";");
+    }
+
+    @Test
+    void aceitaAssinaturaNoFormatoOficialDoMercadoPago() {
+        long ts = Instant.now().getEpochSecond();
+        String v1 = computeV1FormatoMercadoPago(ts);
+        var validator = new MercadoPagoWebhookValidator(SECRET, Instant::now);
+        assertThat(validator.validateSignature("ts=" + ts + ",v1=" + v1, REQUEST_ID, DATA_ID)).isTrue();
+    }
+
+    @Test
+    void aceitaAssinaturaComTypeNoManifesto() {
+        long ts = Instant.now().getEpochSecond();
+        String manifest = "id:" + DATA_ID + ";type:payment;request-id:" + REQUEST_ID + ";ts:" + ts + ";";
+        String v1 = hmacHex(manifest);
+        var validator = new MercadoPagoWebhookValidator(SECRET, Instant::now);
+        assertThat(validator.validateSignature("ts=" + ts + ",v1=" + v1, REQUEST_ID, DATA_ID, "payment")).isTrue();
+    }
+
+    private static String hmacHex(String manifest) {
         try {
-            String manifest = "id=" + DATA_ID + ";request-id=" + REQUEST_ID + ";ts=" + ts + ";";
             Mac mac = Mac.getInstance("HmacSHA256");
             mac.init(new SecretKeySpec(SECRET.getBytes(StandardCharsets.UTF_8), "HmacSHA256"));
             byte[] digest = mac.doFinal(manifest.getBytes(StandardCharsets.UTF_8));
