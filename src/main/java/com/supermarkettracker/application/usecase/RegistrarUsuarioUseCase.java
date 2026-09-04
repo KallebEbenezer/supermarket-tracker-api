@@ -3,7 +3,7 @@ package com.supermarkettracker.application.usecase;
 import com.supermarkettracker.application.command.RegistrarUsuarioCommand;
 import com.supermarkettracker.domain.exception.ConflitoDeDominioException;
 import com.supermarkettracker.domain.model.Credencial;
-import com.supermarkettracker.domain.model.StatusAtivo;
+import com.supermarkettracker.domain.model.enums.StatusAtivo;
 import com.supermarkettracker.domain.model.Usuario;
 import com.supermarkettracker.domain.model.valueobject.Email;
 import com.supermarkettracker.domain.model.valueobject.Identificador;

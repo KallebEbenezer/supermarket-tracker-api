@@ -4,4 +4,5 @@ import com.supermarkettracker.domain.model.valueobject.Identificador;
 import com.supermarkettracker.domain.repository.ClienteRepository;
 import com.supermarkettracker.infrastructure.web.dto.ClienteResponse;
 import java.util.List;
+import com.supermarkettracker.application.query.ListarClientesQuery;
 public final class ListarClientesUseCase { private final ClienteRepository clientes; public ListarClientesUseCase(ClienteRepository clientes) { this.clientes = clientes; } public List<ClienteResponse> executar(ListarClientesQuery q) { return clientes.listarPorEmpresa(new Identificador(q.empresaId())).stream().map(ClienteResponse::from).toList(); } }
