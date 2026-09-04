@@ -26,8 +26,9 @@ class UseCasesTest {
 
     @Test void cadastrarEmpresa_salvaEDevolveDto() {
         EmpresaRepository repo = mock(EmpresaRepository.class);
+        EmpresaUsuarioRepository euRepo = mock(EmpresaUsuarioRepository.class);
         when(repo.salvar(any())).thenAnswer(i -> i.getArgument(0));
-        var result = new CadastrarEmpresaUseCase(repo).executar(new CadastrarEmpresaCommand("Razao", "Fantasia", "12.345.678/0001-90"));
+        var result = new CadastrarEmpresaUseCase(repo, euRepo).executar(new CadastrarEmpresaCommand("Razao", "Fantasia", "12.345.678/0001-90", null));
         assertThat(result.nomeFantasia()).isEqualTo("Fantasia");
         verify(repo).salvar(argThat(e -> e.status() == StatusEmpresa.ATIVA));
     }
@@ -143,6 +144,119 @@ class UseCasesTest {
         when(vendas.buscarPorId(any())).thenReturn(Optional.of(venda(StatusVenda.ABERTA))); when(gateway.processarPix(any(), any())).thenReturn(new ProcessadorPagamentoGateway.ResultadoPagamento("pix-1", "APROVADO", null)); when(pagamentos.salvar(any())).thenAnswer(i -> i.getArgument(0));
         assertThat(new RegistrarPagamentoUseCase(pagamentos, vendas, gateway).executar(new RegistrarPagamentoCommand(VENDA, null, TipoPagamento.PIX, DEZ, null, (short) 1, null)).referencia()).isEqualTo("pix-1");
         verify(gateway).processarPix(any(), any());
+    }
+
+    // ── Produto (edição) ────────────────────────────────────────────────────
+
+    @Test void cadastrarProdutoAtualizacao_atualizaCampos() {
+        ProdutoRepository repo = mock(ProdutoRepository.class); EmpresaRepository empresas = mock(EmpresaRepository.class);
+        when(empresas.buscarPorId(any())).thenReturn(Optional.of(mock(Empresa.class)));
+        when(repo.buscarPorId(any())).thenReturn(Optional.of(produto()));
+        when(repo.salvar(any())).thenAnswer(i -> i.getArgument(0));
+        var result = new CadastrarProdutoUseCase(repo, empresas).executarAtualizacao(
+            new Identificador(PRODUTO), produtoCommand());
+        assertThat(result.nome()).isEqualTo("Produto");
+        verify(repo).salvar(argThat(p -> p.estoqueAtual().equals(new Quantidade(DEZ))));
+    }
+
+    @Test void cadastrarProdutoAtualizacao_lancaExcecaoSeNaoEncontrado() {
+        ProdutoRepository repo = mock(ProdutoRepository.class); EmpresaRepository empresas = mock(EmpresaRepository.class);
+        when(repo.buscarPorId(any())).thenReturn(Optional.empty());
+        assertThatThrownBy(() -> new CadastrarProdutoUseCase(repo, empresas).executarAtualizacao(
+            new Identificador(PRODUTO), produtoCommand()))
+            .isInstanceOf(EntidadeNaoEncontradaException.class);
+        verify(repo, never()).salvar(any());
+    }
+
+    @Test void cadastrarProdutoAtualizacao_rejeitaCamposObrigatorios() {
+        ProdutoRepository repo = mock(ProdutoRepository.class); EmpresaRepository empresas = mock(EmpresaRepository.class);
+        when(repo.buscarPorId(any())).thenReturn(Optional.of(produto()));
+        assertThatThrownBy(() -> new CadastrarProdutoUseCase(repo, empresas).executarAtualizacao(
+            new Identificador(PRODUTO),
+            new CadastrarProdutoCommand(EMPRESA, null, null, null, "Produto", null, null, DEZ, BigDecimal.valueOf(15), BigDecimal.ONE, false)))
+            .isInstanceOf(RegraDeDominioException.class);
+        verify(repo, never()).salvar(any());
+    }
+
+    // ── Conta Bancária ──────────────────────────────────────────────────────
+
+    @Test void cadastrarContaBancaria_salvaEDevolveDto() {
+        ContaBancariaRepository repo = mock(ContaBancariaRepository.class);
+        when(repo.salvar(any())).thenAnswer(i -> i.getArgument(0));
+        var result = new CadastrarContaBancariaUseCase(repo).executar(contaBancariaCommand());
+        assertThat(result.bancoNome()).isEqualTo("Banco Teste");
+        assertThat(result.tipo()).isEqualTo("CORRENTE");
+        verify(repo).salvar(argThat(c -> c.status() == StatusAtivo.ATIVO));
+    }
+
+    @Test void cadastrarContaBancaria_rejeitaCamposObrigatorios() {
+        ContaBancariaRepository repo = mock(ContaBancariaRepository.class);
+        assertThatThrownBy(() -> new CadastrarContaBancariaUseCase(repo).executar(
+            new CadastrarContaBancariaCommand(null, "001", "Banco", null, null, TipoContaBancaria.CORRENTE, "Titular", null, null, false)))
+            .isInstanceOf(RegraDeDominioException.class);
+        verify(repo, never()).salvar(any());
+    }
+
+    @Test void cadastrarContaBancariaAtualizacao_atualizaCampos() {
+        ContaBancariaRepository repo = mock(ContaBancariaRepository.class);
+        when(repo.buscarPorId(any())).thenReturn(Optional.of(contaBancaria()));
+        when(repo.salvar(any())).thenAnswer(i -> i.getArgument(0));
+        var result = new CadastrarContaBancariaUseCase(repo).executarAtualizacao(
+            new Identificador(UUID.randomUUID()), contaBancariaCommand());
+        assertThat(result.bancoNome()).isEqualTo("Banco Teste");
+        verify(repo).salvar(any());
+    }
+
+    @Test void cadastrarContaBancariaAtualizacao_lancaExcecaoSeNaoEncontrada() {
+        ContaBancariaRepository repo = mock(ContaBancariaRepository.class);
+        when(repo.buscarPorId(any())).thenReturn(Optional.empty());
+        assertThatThrownBy(() -> new CadastrarContaBancariaUseCase(repo).executarAtualizacao(
+            new Identificador(UUID.randomUUID()), contaBancariaCommand()))
+            .isInstanceOf(EntidadeNaoEncontradaException.class);
+        verify(repo, never()).salvar(any());
+    }
+
+    @Test void buscarContaBancaria_devolveDtoOuNaoEncontrado() {
+        ContaBancariaRepository repo = mock(ContaBancariaRepository.class);
+        when(repo.buscarPorId(any())).thenReturn(Optional.of(contaBancaria()));
+        assertThat(new BuscarContaBancariaUseCase(repo).executar(new BuscarContaBancariaQuery(UUID.randomUUID())).bancoNome()).isEqualTo("Banco");
+        when(repo.buscarPorId(any())).thenReturn(Optional.empty());
+        assertThatThrownBy(() -> new BuscarContaBancariaUseCase(repo).executar(new BuscarContaBancariaQuery(UUID.randomUUID())))
+            .isInstanceOf(EntidadeNaoEncontradaException.class);
+    }
+
+    @Test void listarContasBancarias_mapeiaResultadoDoRepositorio() {
+        ContaBancariaRepository repo = mock(ContaBancariaRepository.class);
+        when(repo.listarPorEmpresa(any())).thenReturn(List.of(contaBancaria()));
+        assertThat(new ListarContasBancariasUseCase(repo).executar(new ListarContasBancariasQuery(EMPRESA)))
+            .singleElement().extracting("bancoNome").isEqualTo("Banco");
+    }
+
+    @Test void excluirContaBancaria_excluiQuandoEncontrada() {
+        ContaBancariaRepository repo = mock(ContaBancariaRepository.class);
+        when(repo.buscarPorId(any())).thenReturn(Optional.of(contaBancaria()));
+        new ExcluirContaBancariaUseCase(repo).executar(new ExcluirEntidadeQuery(UUID.randomUUID()));
+        verify(repo).excluirPorId(any());
+    }
+
+    @Test void excluirContaBancaria_lancaExcecaoSeNaoEncontrada() {
+        ContaBancariaRepository repo = mock(ContaBancariaRepository.class);
+        when(repo.buscarPorId(any())).thenReturn(Optional.empty());
+        assertThatThrownBy(() -> new ExcluirContaBancariaUseCase(repo).executar(new ExcluirEntidadeQuery(UUID.randomUUID())))
+            .isInstanceOf(EntidadeNaoEncontradaException.class);
+        verify(repo, never()).excluirPorId(any());
+    }
+
+    private static CadastrarContaBancariaCommand contaBancariaCommand() {
+        return new CadastrarContaBancariaCommand(EMPRESA, "001", "Banco Teste", "1234", "56789",
+            TipoContaBancaria.CORRENTE, "Titular Teste", null, null, false);
+    }
+
+    private static ContaBancaria contaBancaria() {
+        Instant agora = Instant.now();
+        return new ContaBancaria(Identificador.novo(), new Identificador(EMPRESA), "001", "Banco",
+            "1234", "56789", TipoContaBancaria.CORRENTE, "Titular", null, null, false,
+            StatusAtivo.ATIVO, agora, agora);
     }
 
     private static CadastrarProdutoCommand produtoCommand() { return new CadastrarProdutoCommand(EMPRESA, null, "789", null, "Produto", null, null, DEZ, BigDecimal.valueOf(15), BigDecimal.ONE, false); }
