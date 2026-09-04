@@ -3,6 +3,7 @@ import com.supermarkettracker.domain.model.ItemVenda;
 import com.supermarkettracker.domain.model.Venda;
 import com.supermarkettracker.domain.model.valueobject.Identificador;
 import com.supermarkettracker.domain.repository.VendaRepository;
+import com.supermarkettracker.infrastructure.persistence.entity.VendaEntity;
 import com.supermarkettracker.infrastructure.persistence.mapper.VendaPersistenceMapper;
 import com.supermarkettracker.infrastructure.persistence.repository.ItemVendaJpaRepository;
 import com.supermarkettracker.infrastructure.persistence.repository.VendaJpaRepository;
@@ -36,6 +37,10 @@ public class VendaRepositoryJpaAdapter implements VendaRepository {
         List<VendaEntity> entidades = lojaId == null
                 ? vendas.findByEmpresaIdOrderByCriadoEmDesc(empresaId.valor())
                 : vendas.findByEmpresaIdAndLojaIdOrderByCriadoEmDesc(empresaId.valor(), lojaId.valor());
-        return entidades.stream().limit(limite).map(mapper::toDomain).toList();
+        return entidades.stream().limit(limite).map((VendaEntity e) -> mapper.toDomain(e)).toList();
+    }
+
+    public Optional<Long> findMaxNumeroByEmpresaId(Identificador empresaId) {
+        return vendas.findMaxNumeroByEmpresaId(empresaId.valor());
     }
 }

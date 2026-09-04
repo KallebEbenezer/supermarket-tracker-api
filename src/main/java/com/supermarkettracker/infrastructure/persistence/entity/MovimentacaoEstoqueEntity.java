@@ -1,3 +1,48 @@
 package com.supermarkettracker.infrastructure.persistence.entity;
-import com.supermarkettracker.domain.model.enums.TipoMovimentacaoEstoque; import jakarta.persistence.*; import org.hibernate.annotations.JdbcTypeCode; import org.hibernate.type.SqlTypes; import java.math.BigDecimal; import java.time.Instant; import java.util.UUID;
-@Entity @Table(name="estoque_movimentacao") public class MovimentacaoEstoqueEntity { @Id public UUID id; @Column(name="empresa_id",nullable=false) public UUID empresaId; @Column(name="loja_id",nullable=false) public UUID lojaId; @Column(name="produto_id",nullable=false) public UUID produtoId; @Column(name="usuario_id",nullable=false) public UUID usuarioId; @Column(name="venda_id") public UUID vendaId; @Column(name="item_venda_id") public UUID itemVendaId; @Enumerated(EnumType.STRING) @JdbcTypeCode(SqlTypes.NAMED_ENUM) @Column(nullable=false,columnDefinition="tipo_movimentacao_estoque") public TipoMovimentacaoEstoque tipo; @Column(nullable=false,precision=14,scale=3) public BigDecimal quantidade; @Column(name="estoque_anterior",nullable=false,precision=14,scale=3) public BigDecimal estoqueAnterior; @Column(name="estoque_posterior",nullable=false,precision=14,scale=3) public BigDecimal estoquePosterior; @Column(name="custo_unitario",precision=14,scale=2) public BigDecimal custoUnitario; public String motivo; @Column(name="referencia_externa",length=100) public String referenciaExterna; @Column(name="created_at",nullable=false) public Instant criadoEm; public MovimentacaoEstoqueEntity() {} }
+
+import com.supermarkettracker.domain.model.enums.TipoMovimentacaoEstoque;
+import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+import java.math.BigDecimal;
+import java.time.Instant;
+import java.util.UUID;
+
+@Entity
+@Table(name = "estoque_movimentacao")
+public class MovimentacaoEstoqueEntity {
+    @Id
+    public UUID id;
+    @Column(name = "empresa_id", nullable = false)
+    public UUID empresaId;
+    @Column(name = "loja_id", nullable = false)
+    public UUID lojaId;
+    @Column(name = "produto_id", nullable = false)
+    public UUID produtoId;
+    @Column(name = "usuario_id", nullable = false)
+    public UUID usuarioId;
+    @Column(name = "venda_id")
+    public UUID vendaId;
+    @Column(name = "item_venda_id")
+    public UUID itemVendaId;
+    @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
+    @Column(nullable = false, columnDefinition = "tipo_movimentacao_estoque")
+    public TipoMovimentacaoEstoque tipo;
+    @Column(nullable = false, precision = 14, scale = 3)
+    public BigDecimal quantidade;
+    @Column(name = "estoque_anterior", nullable = false, precision = 14, scale = 3)
+    public BigDecimal estoqueAnterior;
+    @Column(name = "estoque_posterior", nullable = false, precision = 14, scale = 3)
+    public BigDecimal estoquePosterior;
+    @Column(name = "custo_unitario", precision = 14, scale = 2)
+    public BigDecimal custoUnitario;
+    public String motivo;
+    @Column(name = "referencia_externa", length = 100)
+    public String referenciaExterna;
+    @Column(name = "created_at", nullable = false)
+    public Instant criadoEm;
+
+    public MovimentacaoEstoqueEntity() {
+    }
+}

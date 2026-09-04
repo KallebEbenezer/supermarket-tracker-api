@@ -23,4 +23,5 @@ public class LojaRepositoryJpaAdapter implements LojaRepository {
     public List<Loja> listarPorEmpresa(Identificador empresaId) {
         return jpa.findByEmpresaIdOrderByNomeAsc(empresaId.valor()).stream().map(mapper::toDomain).toList();
     }
+    public void excluirPorId(Identificador id) { jpa.deleteById(id.valor()); }
 }

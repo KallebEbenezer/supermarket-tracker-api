@@ -7,4 +7,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface EmpresaUsuarioJpaRepository extends JpaRepository<EmpresaUsuarioEntity, UUID> {
     Optional<EmpresaUsuarioEntity> findByEmpresaIdAndUsuarioId(UUID empresaId, UUID usuarioId);
+    java.util.List<EmpresaUsuarioEntity> findByUsuarioIdAndStatusOrderByCriadoEmDesc(UUID usuarioId, com.supermarkettracker.domain.model.enums.StatusAtivo status);
 }

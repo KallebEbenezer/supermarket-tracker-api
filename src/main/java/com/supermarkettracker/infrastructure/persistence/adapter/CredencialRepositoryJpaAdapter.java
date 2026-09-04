@@ -7,6 +7,7 @@ import com.supermarkettracker.infrastructure.persistence.mapper.CredencialPersis
 import com.supermarkettracker.infrastructure.persistence.repository.CredencialJpaRepository;
 import java.util.Optional;
 import org.springframework.stereotype.Repository;
+import com.supermarkettracker.domain.model.valueobject.Identificador;
 
 @Repository
 public class CredencialRepositoryJpaAdapter implements CredencialRepository {

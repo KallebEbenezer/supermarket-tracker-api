@@ -1,14 +1,18 @@
 package com.supermarkettracker.infrastructure.persistence.adapter;
+
 import com.supermarkettracker.domain.model.Pagamento;
 import com.supermarkettracker.domain.model.PagamentoCartao;
 import com.supermarkettracker.domain.model.PagamentoPix;
+import com.supermarkettracker.domain.model.enums.StatusPagamento;
 import com.supermarkettracker.domain.model.valueobject.Identificador;
 import com.supermarkettracker.domain.repository.PagamentoRepository;
+import com.supermarkettracker.infrastructure.persistence.entity.PagamentoPixEntity;
 import com.supermarkettracker.infrastructure.persistence.mapper.CadastrosPersistenceMapper;
 import com.supermarkettracker.infrastructure.persistence.mapper.PagamentoPersistenceMapper;
 import com.supermarkettracker.infrastructure.persistence.repository.PagamentoCartaoJpaRepository;
 import com.supermarkettracker.infrastructure.persistence.repository.PagamentoJpaRepository;
 import com.supermarkettracker.infrastructure.persistence.repository.PagamentoPixJpaRepository;
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.stereotype.Repository;
@@ -59,5 +63,27 @@ public class PagamentoRepositoryJpaAdapter implements PagamentoRepository {
     public List<Pagamento> listarPorVenda(Identificador vendaId) {
         return pagamentos.findByVendaIdOrderByCriadoEmAsc(vendaId.valor()).stream()
                 .map(pagamentoMapper::toDomain).toList();
+    }
+
+    @Override
+    public void atualizarStatus(Identificador pagamentoId, StatusPagamento status, Instant recebidoEm) {
+        pagamentos.findById(pagamentoId.valor()).ifPresent(entity -> {
+            entity.status = status;
+            entity.recebidoEm = recebidoEm;
+            entity.atualizadoEm = Instant.now();
+            pagamentos.save(entity);
+        });
+    }
+
+    @Override
+    public Optional<PagamentoPix> buscarPixPorGatewayTransacaoId(String gatewayTransacaoId) {
+        return pagamentosPix.findByGatewayTransacaoId(gatewayTransacaoId)
+                .map(entity -> cadastrosMapper.toDomain(entity));
+    }
+
+    @Override
+    public Optional<PagamentoPix> buscarPixPorVendaId(Identificador vendaId) {
+        return pagamentosPix.findByVendaId(vendaId.valor())
+                .map(entity -> cadastrosMapper.toDomain(entity));
     }
 }

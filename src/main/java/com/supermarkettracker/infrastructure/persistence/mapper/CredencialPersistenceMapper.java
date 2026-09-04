@@ -6,6 +6,7 @@ import com.supermarkettracker.domain.model.valueobject.Identificador;
 import com.supermarkettracker.infrastructure.persistence.entity.CredencialEntity;
 
 /** Converte entre {@link Credencial} (domínio) e {@link CredencialEntity} (JPA). */
+@org.springframework.stereotype.Component
 public final class CredencialPersistenceMapper {
     private CredencialPersistenceMapper() { }
 

@@ -6,6 +6,7 @@ import com.supermarkettracker.infrastructure.persistence.mapper.ClientePersisten
 import com.supermarkettracker.infrastructure.persistence.repository.ClienteJpaRepository;
 import java.util.Optional;
 import org.springframework.stereotype.Repository;
+import java.util.List;
 
 @Repository
 public class ClienteRepositoryJpaAdapter implements ClienteRepository {
@@ -22,4 +23,5 @@ public class ClienteRepositoryJpaAdapter implements ClienteRepository {
     public List<Cliente> listarPorEmpresa(Identificador empresaId) {
         return jpa.findByEmpresaIdOrderByNomeAsc(empresaId.valor()).stream().map(mapper::toDomain).toList();
     }
+    public void excluirPorId(Identificador id) { jpa.deleteById(id.valor()); }
 }
