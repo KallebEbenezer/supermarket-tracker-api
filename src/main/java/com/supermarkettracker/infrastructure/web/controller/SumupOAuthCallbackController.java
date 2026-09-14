@@ -1,5 +1,7 @@
 package com.supermarkettracker.infrastructure.web.controller;
 
+import com.supermarkettracker.domain.exception.GatewayIndisponivelException;
+import com.supermarkettracker.infrastructure.integration.sumup.SumupOAuthAuthorizationService;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -10,31 +12,45 @@ import org.springframework.web.bind.annotation.RestController;
 /**
  * URL pública cadastrada na SumUp para o retorno da autorização OAuth.
  *
- * <p>Não exibe nem registra o código retornado. A troca do código e a
- * persistência segura do refresh token serão habilitadas depois que as
- * credenciais da aplicação OAuth forem configuradas no ambiente.</p>
+ * <p>Não exibe nem registra o código retornado. Após validar o state, a troca
+ * acontece exclusivamente no servidor e o refresh token fica cifrado no banco.</p>
  */
 @RestController
 @RequestMapping("/api/v1/integracoes/sumup/oauth")
 public class SumupOAuthCallbackController {
+    private final SumupOAuthAuthorizationService authorizationService;
+
+    public SumupOAuthCallbackController(SumupOAuthAuthorizationService authorizationService) {
+        this.authorizationService = authorizationService;
+    }
 
     @GetMapping(value = "/callback", produces = MediaType.TEXT_HTML_VALUE)
     public ResponseEntity<String> callback(
             @RequestParam(required = false) String code,
+            @RequestParam(required = false) String state,
             @RequestParam(required = false) String error) {
         if (error != null && !error.isBlank()) {
             return ResponseEntity.badRequest().body(page(
                     "Autorização não concluída",
                     "A autorização da SumUp foi cancelada ou recusada. Você pode fechar esta página e tentar novamente."));
         }
-        if (code == null || code.isBlank()) {
+        if (code == null || code.isBlank() || state == null || state.isBlank()) {
             return ResponseEntity.badRequest().body(page(
                     "Retorno OAuth inválido",
                     "Não recebemos uma autorização válida da SumUp. Volte ao sistema e inicie o processo novamente."));
         }
+        try {
+            authorizationService.finishAuthorization(code, state);
+        } catch (IllegalArgumentException exception) {
+            return ResponseEntity.badRequest().body(page(
+                    "Retorno OAuth inválido", "A autorização expirou ou não corresponde ao pedido iniciado."));
+        } catch (GatewayIndisponivelException exception) {
+            return ResponseEntity.internalServerError().body(page(
+                    "Não foi possível concluir a autorização", "Tente iniciar a autorização novamente."));
+        }
         return ResponseEntity.ok(page(
-                "Autorização recebida",
-                "A SumUp retornou ao Supermarket Tracker. Você pode fechar esta página e voltar ao sistema."));
+                "Autorização concluída",
+                "A conta SumUp foi autorizada com segurança. Você pode fechar esta página e voltar ao sistema."));
     }
 
     private String page(String title, String message) {

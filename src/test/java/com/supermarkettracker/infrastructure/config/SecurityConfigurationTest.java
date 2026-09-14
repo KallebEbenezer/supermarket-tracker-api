@@ -16,6 +16,7 @@ import com.supermarkettracker.application.usecase.ExcluirProdutoUseCase;
 import com.supermarkettracker.application.usecase.ListarProdutosUseCase;
 import com.supermarkettracker.infrastructure.web.controller.ProdutoController;
 import com.supermarkettracker.infrastructure.web.controller.SumupOAuthCallbackController;
+import com.supermarkettracker.infrastructure.integration.sumup.SumupOAuthAuthorizationService;
 import java.math.BigDecimal;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
@@ -61,6 +62,9 @@ class SecurityConfigurationTest {
     @MockBean
     private TokenService tokenService;
 
+    @MockBean
+    private SumupOAuthAuthorizationService sumupOAuthAuthorizationService;
+
     @Test
     void postProdutoAutenticadoNaoExigeTokenCsrf() throws Exception {
         when(cadastrarProduto.executar(any())).thenReturn(new ProdutoDto(UUID.randomUUID(),
@@ -85,7 +89,8 @@ class SecurityConfigurationTest {
     @Test
     void callbackOauthDaSumupEPublicoSemExporOCodigo() throws Exception {
         mockMvc.perform(get("/api/v1/integracoes/sumup/oauth/callback")
-                        .param("code", "authorization-code-sensitive"))
+                        .param("code", "authorization-code-sensitive")
+                        .param("state", "csrf-state-sensitive"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_HTML))
                 .andExpect(content().string(org.hamcrest.Matchers.not(

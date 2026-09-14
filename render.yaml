@@ -41,6 +41,8 @@ services:
         sync: false
       - key: SUMUP_OAUTH_REFRESH_TOKEN
         sync: false
+      - key: SUMUP_OAUTH_REDIRECT_URI
+        value: https://supermarket-tracker-api.onrender.com/api/v1/integracoes/sumup/oauth/callback
       - key: EMAIL_PROVIDER
         value: smtp
       - key: EMAIL_FROM
