@@ -28,6 +28,19 @@ services:
         sync: false
       - key: MERCADOPAGO_WEBHOOK_SECRET
         generateValue: true
+      # SumUp: cadastre os valores reais somente no painel do Render.
+      - key: CARTAO_PROVIDER
+        value: mercadopago
+      - key: SUMUP_API_KEY
+        sync: false
+      - key: SUMUP_MERCHANT_CODE
+        sync: false
+      - key: SUMUP_OAUTH_CLIENT_ID
+        sync: false
+      - key: SUMUP_OAUTH_CLIENT_SECRET
+        sync: false
+      - key: SUMUP_OAUTH_REFRESH_TOKEN
+        sync: false
       - key: EMAIL_PROVIDER
         value: smtp
       - key: EMAIL_FROM

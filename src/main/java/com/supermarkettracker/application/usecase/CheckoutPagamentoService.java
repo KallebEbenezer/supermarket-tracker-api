@@ -105,12 +105,29 @@ final class CheckoutPagamentoService {
     }
 
     private void salvarCartao(Pagamento pagamento, PagamentoCheckoutCommand comando, Identificador pagamentoId) {
+        String token = identificadorCartao(comando.tokenCartao(), comando.referencia());
         CartaoGateway.TransacaoCartao transacao = cartaoGateway.processar(pagamentoId, pagamento.valor(),
-                comando.modalidadeCartao(), comando.parcelas(), comando.tokenCartao());
+                comando.modalidadeCartao(), comando.parcelas(), token);
         exigirAprovado(transacao.status());
         pagamentos.salvarCartao(comReferencia(pagamento, transacao.transacaoId()), new PagamentoCartao(pagamentoId,
                 comando.modalidadeCartao(), comando.parcelas(), null, null, transacao.codigoAutorizacao(), null,
                 transacao.gateway(), transacao.transacaoId(), transacao.status()));
+    }
+
+    /**
+     * Tap-to-Pay envia txCode em tokenCartao e serverTransactionId em referencia.
+     * O adapter SumUp tenta os dois IDs (separados por '|') quando ambos existem.
+     */
+    private String identificadorCartao(String tokenCartao, String referencia) {
+        boolean temToken = tokenCartao != null && !tokenCartao.isBlank();
+        boolean temReferencia = referencia != null && !referencia.isBlank();
+        if (temToken && temReferencia && !tokenCartao.equals(referencia)) {
+            return tokenCartao + "|" + referencia;
+        }
+        if (temToken) {
+            return tokenCartao;
+        }
+        return referencia;
     }
 
     private void validar(PagamentoCheckoutCommand pagamento) {

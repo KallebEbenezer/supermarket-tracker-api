@@ -43,6 +43,11 @@ app:
       base-url: https://api.mercadopago.com
   cartao:
     provider: ${CARTAO_PROVIDER:mercadopago}
+  sumup:
+    # Nunca exponha esta chave ao app Flutter. Ela é usada apenas para
+    # reconciliar, no servidor, a transação que o SDK Tap-to-Pay aprovou.
+    api-key: ${SUMUP_API_KEY:}
+    merchant-code: ${SUMUP_MERCHANT_CODE:}
   mercadopago:
     access-token: ${MERCADOPAGO_ACCESS_TOKEN:}
     base-url: https://api.mercadopago.com
