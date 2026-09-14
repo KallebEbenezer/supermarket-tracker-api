@@ -2,6 +2,7 @@ package com.supermarkettracker.infrastructure.integration.sumup;
 
 import com.supermarkettracker.domain.exception.GatewayConfiguracaoException;
 import com.supermarkettracker.domain.exception.GatewayIndisponivelException;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
@@ -25,6 +26,7 @@ public class SumupTapToPayTokenService {
     private final String initialRefreshToken;
     private final SumupOAuthCredentialStore credentialStore;
 
+    @Autowired
     public SumupTapToPayTokenService(
             RestClient.Builder restClientBuilder,
             @Value("${SUMUP_OAUTH_CLIENT_ID:}") String clientId,
