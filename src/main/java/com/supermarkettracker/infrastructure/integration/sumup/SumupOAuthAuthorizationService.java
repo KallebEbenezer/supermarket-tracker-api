@@ -5,6 +5,7 @@ import com.supermarkettracker.domain.exception.GatewayIndisponivelException;
 import java.security.SecureRandom;
 import java.util.Base64;
 import java.util.Map;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
@@ -25,6 +26,7 @@ public class SumupOAuthAuthorizationService {
     private final SumupOAuthCredentialStore credentialStore;
     private final SecureRandom random = new SecureRandom();
 
+    @Autowired
     public SumupOAuthAuthorizationService(
             RestClient.Builder restClientBuilder,
             @Value("${SUMUP_OAUTH_CLIENT_ID:}") String clientId,
