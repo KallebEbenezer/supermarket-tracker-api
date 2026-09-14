@@ -64,7 +64,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(GatewayIndisponivelException.class)
     ResponseEntity<ErrorResponse> handleGatewayUnavailable(GatewayIndisponivelException exception, HttpServletRequest request) {
-        LOGGER.error("Gateway indisponível: {}", exception.getMessage());
+        LOGGER.error("Gateway indisponível no traceId={}: {}", traceId(), exception.getMessage(), exception);
         return error(HttpStatus.BAD_GATEWAY, "GATEWAY_UNAVAILABLE", exception.getMessage(), Map.of(), request);
     }
 

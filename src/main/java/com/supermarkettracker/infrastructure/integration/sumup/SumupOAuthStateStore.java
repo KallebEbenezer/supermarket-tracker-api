@@ -1,5 +1,6 @@
 package com.supermarkettracker.infrastructure.integration.sumup;
 
+import com.supermarkettracker.domain.exception.GatewayIndisponivelException;
 import com.supermarkettracker.infrastructure.persistence.entity.SumupOAuthStateEntity;
 import com.supermarkettracker.infrastructure.persistence.repository.SumupOAuthStateJpaRepository;
 import java.nio.charset.StandardCharsets;
@@ -8,6 +9,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.HexFormat;
 import org.springframework.stereotype.Service;
+import org.springframework.dao.DataAccessException;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
@@ -21,7 +23,16 @@ public class SumupOAuthStateStore {
         var entity = new SumupOAuthStateEntity();
         entity.stateHash = hash(state);
         entity.expiraEm = Instant.now().plus(Duration.ofMinutes(10));
-        repository.save(entity);
+        try {
+            // Força a gravação dentro desta transação para que uma migration
+            // ausente ou indisponibilidade do banco não vire um 500 genérico
+            // depois que o controller já retornou.
+            repository.saveAndFlush(entity);
+        } catch (DataAccessException exception) {
+            throw new GatewayIndisponivelException(
+                    "Não foi possível armazenar a autorização OAuth da SumUp. Verifique a migration do banco.",
+                    exception);
+        }
     }
 
     @Transactional
